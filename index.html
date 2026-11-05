@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>آزمایشگاه زیست‌شناسی - تشریح مغز گوسفند</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; padding: 0; font-family: 'Vazirmatn', Tahoma, sans-serif; 
+            overflow: hidden; height: 100vh; background: #07111f; color: #edf5ff; 
+        }
+
+        /* ================= صفحه ورود ================= */
+        #splash-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: #000; 
+            /* عکس DNA اینجا لود میشه. عکس باید کنار فایل html با اسم dna.jpg باشه */
+            background-image: url('dna.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 9999; transition: opacity 0.5s ease; 
+            animation: zoomBg 20s ease-in-out infinite alternate; 
+        }
+        
+        @keyframes zoomBg {
+            0% { background-size: 100%; }
+            100% { background-size: 120%; }
+        }
+
+        .overlay { position: absolute; inset: 0; background: rgba(5, 10, 20, 0.6); z-index: 1; }
+
+        .splash-content { 
+            position: relative; z-index: 2; text-align: center; padding: 40px 30px; 
+            background: rgba(15, 20, 30, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .splash-content h1 { font-size: 30px; margin: 0 0 15px 0; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .splash-content p { font-size: 16px; color: #b8cbe1; margin-bottom: 35px; }
+        .enter-btn { 
+            background: linear-gradient(135deg, #00e5ff 0%, #007bb5 100%); 
+            border: none; color: #000; padding: 15px 70px; font-size: 18px; font-weight: bold; 
+            border-radius: 50px; cursor: pointer; font-family: inherit; 
+            box-shadow: 0 10px 25px rgba(0, 229, 255, 0.4); transition: all 0.2s; 
+        }
+        .enter-btn:active { transform: scale(0.95); }
+        
+        .creators { 
+            position: absolute; bottom: 25px; width: 100%; text-align: center; 
+            font-size: 12px; color: #8b9bb4; font-weight: 300; direction: rtl; z-index: 2; 
+        }
+        .creators span { margin: 0 10px; }
+
+        /* ================= بخش مدل سه‌بعدی ================= */
+        #app-container { display: none; height: 100vh; width: 100vw; flex-direction: column; }
+        #threejs-container { position: absolute; inset: 0; display: flex; flex-direction: column; color: #edf5ff; font-family: Tahoma, Arial, sans-serif; }
+        
+        #threejs-container header { padding: 15px 20px; background: #0a192b; border-bottom: 1px solid #29496d; flex-shrink: 0; }
+        #threejs-container header h1 { font-size: 18px; margin: 0 0 8px; }
+        #threejs-container header p { font-size: 12px; color: #b8cbe1; margin: 0; line-height: 1.8; }
+        
+        #tabs3d { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 15px; background: #0a192b; z-index: 5; border-bottom: 1px solid #29496d; flex-shrink: 0; overflow-x: auto; }
+        #tabs3d button { font-family: inherit; color: #edf5ff; background: #15385d; border: 1px solid #4775a8; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 12px; white-space: nowrap; transition: 0.2s;}
+        #tabs3d button:hover, #tabs3d button.active { background: #23639a; border-color: #80c4ff; }
+        
+        #threejs-container main { display: grid; grid-template-columns: minmax(0,1fr) 350px; gap: 15px; padding: 15px; flex: 1; overflow: hidden; }
+        #threejs-stage { border: 1px solid #29496d; border-radius: 14px; overflow: hidden; background: #07111f; position: relative; }
+        #threejs-canvas { width: 100%; height: 100%; }
+        #sceneTitle { position: absolute; top: 15px; left: 15px; z-index: 2; background: #0b1b30dc; border: 1px solid #29496d; padding: 8px 12px; border-radius: 9px; font-size: 13px; pointer-events: none; }
+        
+        #threejs-container aside { background: #0c1d32; border: 1px solid #29496d; border-radius: 14px; padding: 18px; overflow: auto; direction: rtl; }
+        #threejs-container h2 { font-size: 16px; margin: 0 0 12px; color: #eafcff;}
+        #threejs-container h3 { font-size: 14px; color: #8fc5ff; margin: 18px 0 8px; }
+        #threejs-container p { font-size: 13px; line-height: 2; color: #b8cbe1; margin: 8px 0; }
+        
+        #info { background: #102743; border: 1px solid #244b70; border-radius: 10px; padding: 15px; margin-top: 15px; min-height: 120px; transition: all .3s; }
+        .selectedTag { font-size: 11px; color: #68e6ee; margin-bottom: 8px; display: block;}
+        .selectedName { display: block; color: #eafcff; font-size: 17px; margin: 5px 0 10px; font-weight: bold;}
+        .hintText { font-size: 11px; color: #8faec9; border-top: 1px solid #29496d; padding-top: 10px; margin-top: 10px; }
+        
+        #items { display: flex; flex-wrap: wrap; gap: 6px; }
+        #items button { font-size: 12px; padding: 8px 10px; background: #15385d; border: 1px solid #4775a8; border-radius: 8px; color: #fff; cursor: pointer; transition: 0.2s;}
+        #items button:hover { background: #23639a; }
+        .controls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+        .controls button { background: #15385d; border: 1px solid #4775a8; border-radius: 8px; padding: 8px 12px; color: #fff; cursor: pointer;}
+        
+        /* راهنمای فعالیت */
+        #activityGuide { display: none; position: absolute; inset: 0; overflow: auto; padding: 20px; background: #08182a; direction: rtl; }
+        #activityGuide .guideHead { background: #102b49; border: 1px solid #31577e; border-radius: 13px; padding: 16px; margin-bottom: 15px; }
+        #activityGuide h2 { font-size: 18px; margin: 0 0 10px; color: #d8ecff; }
+        #activityGuide .step { background: #0d2239; border: 1px solid #29496d; border-radius: 12px; padding: 15px; margin: 12px 0; }
+        #activityGuide .step h3 { font-size: 15px; color: #8fd0ff; margin: 0 0 10px; }
+        #activityGuide .pill { display: inline-block; background: #17466d; border-radius: 20px; padding: 5px 10px; font-size: 12px; margin: 4px; color: #fff; }
+
+        @media(max-width:900px){ 
+            #threejs-container main { grid-template-columns:1fr; } 
+            #threejs-container aside { max-height: 40vh; } 
+            #threejs-container header p { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- صفحه ورود -->
+    <div id="splash-screen">
+        <div class="overlay"></div>
+        <div class="splash-content">
+            <h1>آزمایشگاه زیست‌شناسی</h1>
+            <p>محیط تعاملی تشریح سه‌بعدی مغز گوسفند</p>
+            <button class="enter-btn" onclick="enterApp()">ورود به آزمایشگاه</button>
+        </div>
+        <div class="creators">
+            <span>محمد طاها قاسمی</span> • <span>امیرعلی حاجیان</span>
+        </div>
+    </div>
+
+    <!-- محیط اصلی -->
+    <div id="app-container">
+        <div id="threejs-container">
+            <header>
+                <h1>آزمایشگاه سه‌بعدی مغز و نخاع گوسفند</h1>
+                <p>برای چرخش مدل، آن را با موس یا انگشت بکشید. برای بزرگ‌نمایی از چرخ ماوس یا دو انگشت استفاده کنید. با کلیک روی هر بخش از مدل یا دکمه‌های سمت راست، نام و توضیحات کامل آن نمایش داده می‌شود.</p>
+            </header>
+            
+            <nav id="tabs3d">
+                <button data-scene="sheepModel">مدل سه‌بعدی آنلاین</button>
+                <button class="active" data-scene="external">نمای پشتی مغز</button>
+                <button data-scene="ventral">نمای شکمی (زیرین)</button>
+                <button data-scene="internal">برش درونی مغز</button>
+                <button data-scene="cord">مقطع نخاع</button>
+                <button data-scene="reflex">قوس انعکاسی</button>
+                <button data-scene="spinalNerves">اعصاب نخاعی</button>
+                <button data-scene="cranial">۱۲ عصب مغزی</button>
+                <button data-scene="activity">راهنمای تشریح (فعالیت ۷)</button>
+            </nav>
+            
+            <main>
+                <section id="threejs-stage">
+                    <div id="sceneTitle">نمای بیرونی مغز — مدل شماتیک</div>
+                    <div id="threejs-canvas"></div>
+                    <div id="activityGuide"></div>
+                    <div id="realModel" style="display:none;width:100%;height:100%;background:#07111f">
+                        <iframe src="https://easyanatomylab.com/embed/sheep-brain-dissection" title="مدل سه‌بعدی" style="width:100%;height:100%;border:0" allow="fullscreen" allowfullscreen loading="lazy"></iframe>
+                    </div>
+                </section>
+                <aside>
+                    <h2 id="panelTitle">ساختارهای مغز</h2>
+                    <p id="intro">برای دیدن نام و توضیحات کامل هر بخش، روی آن کلیک کنید یا از فهرست زیر انتخاب کنید.</p>
+                    <div class="controls">
+                        <button id="reset">🔄 زاویه اولیه</button>
+                        <button id="showAll">👁️ نمایش همه</button>
+                        <button id="hideAll">🚫 پنهان‌کردن همه</button>
+                    </div>
+                    <h3>فهرست ساختارها</h3>
+                    <div id="items"></div>
+                    <div id="info"><b>راهنما</b><p>یک ساختار را انتخاب کنید تا توضیحات علمی آن نمایش داده شود.</p></div>
+                </aside>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function enterApp() {
+            document.getElementById('splash-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
+            }, 400);
+        }
+    </script>
+
+    <!-- ================= اسکریپت‌های سه‌بعدی ================= -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const host = document.querySelector('#threejs-canvas');
+        let scene, camera, renderer, controls;
+        let objects = [], byName = {}, active = [], current = 'external';
+
+        const mats = {
+            cortex: new THREE.MeshStandardMaterial({ color: 0xb77c63, roughness: .8 }),
+            white: new THREE.MeshStandardMaterial({ color: 0xe0c59f, roughness: .8 }),
+            gray: new THREE.MeshStandardMaterial({ color: 0x9e654b, roughness: .75 }),
+            cerebellum: new THREE.MeshStandardMaterial({ color: 0xb68c72, roughness: .8 }),
+            stem: new THREE.MeshStandardMaterial({ color: 0xc99c76, roughness: .8 }),
+            nerve: new THREE.MeshStandardMaterial({ color: 0xe2bd62, roughness: .65 }),
+            fluid: new THREE.MeshStandardMaterial({ color: 0x9bd9f2, transparent: true, opacity: .72 }),
+            gland: new THREE.MeshStandardMaterial({ color: 0xc88bb5, roughness: .6 }),
+            selected: new THREE.MeshStandardMaterial({ color: 0x38d9e8, emissive: 0x087f91, emissiveIntensity: .65 })
+        };
+
+        function initThree() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x07111f);
+            camera = new THREE.PerspectiveCamera(38, 1, .1, 100);
+            camera.position.set(0, 1.1, 7.5);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            host.appendChild(renderer.domElement);
+            
+            scene.add(new THREE.HemisphereLight(0xe8f3ff, 0x493426, 2.1));
+            const key = new THREE.DirectionalLight(0xffffff, 3); key.position.set(-3, 5, 6); scene.add(key);
+            const rim = new THREE.DirectionalLight(0x6aaaff, 1.5); rim.position.set(4, 1, -4); scene.add(rim);
+            
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.target.set(0, 0, 0);
+            controls.minDistance = 3.5;
+            controls.maxDistance = 18;
+
+            const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+            renderer.domElement.addEventListener('click', e => {
+                const r = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+                mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+                ray.setFromCamera(mouse, camera);
+                const hits = ray.intersectObjects(objects);
+                if (hits.length) select(hits[0].object.userData.name);
+            });
+
+            document.querySelectorAll('#tabs3d button').forEach(b => b.addEventListener('click', () => {
+                document.querySelectorAll('#tabs3d button').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                load(b.dataset.scene);
+            }));
+
+            document.querySelector('#reset').onclick = () => {
+                camera.position.set(0, 1.1, 7.5); controls.target.set(0, 0, 0); controls.update();
+            };
+            document.querySelector('#showAll').onclick = () => {
+                objects.forEach(o => { o.visible = true; o.material = o.userData.baseMat; if (o.userData.baseScale) o.scale.copy(o.userData.baseScale); });
+                active = [];
+                document.querySelector('#info').innerHTML = '<b>همه ساختارها نمایش داده شدند</b><p>برای بررسی جزئیات، یک ساختار را انتخاب کن.</p>';
+            };
+            document.querySelector('#hideAll').onclick = () => {
+                objects.forEach(o => o.visible = false); active = [];
+                document.querySelector('#info').innerHTML = '<b>مدل پنهان شد</b><p>برای بازگرداندن اجزا، «نمایش همه» را بزن.</p>';
+            };
+        }
+
+        // --- توابع رسم ---
+        function resetObjects() { for (const o of objects) scene.remove(o); objects = []; byName = {}; active = []; }
+        function add(mesh, name, desc, mat = mesh.material) {
+            mesh.userData = { name, desc, baseMat: mat, baseScale: mesh.scale.clone(), wasVisible: true };
+            scene.add(mesh); objects.push(mesh); (byName[name] ??= []).push(mesh); return mesh;
+        }
+        function ball(name, desc, pos, scale, mat) {
+            const m = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 24), mat);
+            m.position.set(...pos); m.scale.set(...scale); return add(m, name, desc, mat);
+        }
+        function tube(name, desc, pts, r = .07, mat = mats.nerve) {
+            const c = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p)));
+            return add(new THREE.Mesh(new THREE.TubeGeometry(c, 40, r, 10, false), mat), name, desc, mat);
+        }
+        function extrude(name, desc, pts, depth, mat, z = 0) {
+            const s = new THREE.Shape(); s.moveTo(...pts[0]); pts.slice(1).forEach(p => s.lineTo(...p)); s.closePath();
+            const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelSegments: 3, bevelSize: .05, bevelThickness: .05, curveSegments: 24 });
+            const m = new THREE.Mesh(g, mat); m.position.z = z - depth / 2; return add(m, name, desc, mat);
+        }
+        function clearFocus() {
+            objects.forEach(o => {
+                o.material = o.userData.baseMat;
+                if (o.userData.baseScale) o.scale.copy(o.userData.baseScale);
+                o.visible = o.userData.wasVisible !== false;
+            });
+            active = [];
+        }
+        function select(name) {
+            clearFocus();
+            let chosen = byName[name] || [];
+            if (!chosen.length) chosen = objects.filter(o => o.userData.name === name || o.userData.name.startsWith(name + ' —'));
+            active = chosen;
+            const chosenSet = new Set(chosen);
+            objects.forEach(o => {
+                if (chosenSet.has(o)) {
+                    const focus = o.userData.baseMat.clone();
+                    focus.color = new THREE.Color(0x38d9e8); focus.emissive = new THREE.Color(0x087f91);
+                    focus.emissiveIntensity = 0.65; focus.roughness = 0.38;
+                    o.material = focus; o.scale.multiplyScalar(1.025);
+                } else {
+                    const faded = o.userData.baseMat.clone();
+                    faded.transparent = true; faded.opacity = 0.14; faded.depthWrite = false;
+                    o.material = faded;
+                }
+            });
+            const o = chosen[0];
+            const info = document.querySelector('#info');
+            info.innerHTML = o
+                ? '<div class="selectedTag">● ساختار انتخاب‌شده</div><b class="selectedName">' + name + '</b><p>' + o.userData.desc + '</p><p class="hintText">برای دیدن ساختارهای دیگر، روی آن‌ها کلیک کن یا از فهرست استفاده کن.</p>'
+                : '<b>راهنما</b><p>یک ساختار را انتخاب کنید.</p>';
+        }
+
+        // --- سازنده‌های مدل با توضیحات کامل ---
+        function buildExternal() {
+            document.querySelector('#sceneTitle').textContent = 'نمای پشتی مغز گوسفند';
+            document.querySelector('#panelTitle').textContent = 'ساختارهای نمای پشتی';
+            document.querySelector('#intro').textContent = 'در این نما، بخش‌های بالایی مغز که شامل دو نیم‌کره مخ و مخچه است، قابل مشاهده است.';
+            
+            ball('نیم‌کره مخی چپ', 'نیم‌کره چپ مخ بزرگ‌ترین بخش مغز است که مرکز پردازش اطلاعات حسی، حرکتی و شناختی است. سطح آن پر از شیارها و شکنج‌هایی است که سطح تماس قشر مغز را افزایش می‌دهند.', [-.78, .42, 0], [.79, 1.48, .48], mats.cortex);
+            ball('نیم‌کره مخی راست', 'نیم‌کره راست مخ که با شیار طولی از نیم‌کره چپ جدا شده است. وظایف آن شامل کنترل سمت چپ بدن و پردازش اطلاعات فضایی است.', [.78, .42, 0], [.79, 1.48, .48], mats.cortex);
+            tube('شیار طولی بین دو نیم‌کره', 'یک شیار عمیق در خط میانی مغز که دو نیم‌کره چپ و راست را از هم جدا می‌کند.', [[0, 1.82, .43], [0, 1.35, .49], [0, .8, .5], [0, .2, .49], [0, -.45, .4], [0, -.92, .22]], .045, mats.white);
+            ball('پیاز بویایی چپ', 'پیازهای بویایی ساختارهای جلویی مغز هستند که مسئول پردازش اولیه بویایی می‌باشند و از طریق راه‌های بویایی به قشر مخ متصل می‌شوند.', [-.28, 1.88, .15], [.17, .24, .13], mats.gland);
+            ball('پیاز بویایی راست', 'مشابه سمت چپ، وظیفه دریافت و انتقال سیگنال‌های بویایی به مغز را بر عهده دارد.', [.28, 1.88, .15], [.17, .24, .13], mats.gland);
+            const folds = [
+                [[-.35, 1.55, .36], [-.48, 1.25, .43], [-.39, .92, .47], [-.52, .58, .48], [-.42, .22, .46], [-.52, -.12, .39], [-.62, -.42, .3]],
+                [[-.82, 1.62, .30], [-1.05, 1.35, .36], [-.98, 1.02, .41], [-1.12, .72, .42], [-1.02, .35, .4], [-1.12, .02, .32], [-1.02, -.35, .22]],
+                [[-1.25, 1.35, .19], [-1.38, 1.05, .25], [-1.3, .72, .3], [-1.42, .4, .29], [-1.32, .08, .23], [-1.22, -.25, .15]],
+                [[-.18, 1.42, .42], [-.22, 1.08, .47], [-.16, .75, .49], [-.25, .4, .48], [-.17, .05, .44], [-.24, -.28, .35]]
+            ];
+            folds.forEach(pts => tube('شکنج قشر مخ', 'برجستگی‌های سطح قشر مخ که با افزایش سطح، پردازش اطلاعات را ممکن می‌سازند. بین این برجستگی‌ها شیارهایی قرار دارد.', pts, .045, mats.cerebellum));
+            folds.forEach(pts => tube('شکنج قشر مخ', 'برجستگی‌های سطح قشر مخ که با افزایش سطح، پردازش اطلاعات را ممکن می‌سازند.', pts.map(([x, y, z]) => [-x, y, z]), .045, mats.cerebellum));
+            
+            tube('شیار عرضی', 'مرز میان بخش پشتی مخ و مخچه را مشخص می‌کند.', [[-.8, -.82, .2], [-.45, -.91, .28], [0, -.95, .3], [.45, -.91, .28], [.8, -.82, .2]], .035, mats.white);
+            ball('نیم‌کره مخچه چپ', 'مخچه در پشت ساقه مغز قرار دارد و主要负责 هماهنگی حرکات ارادی، حفظ تعادل و یادگیری مهارت‌های حرکتی است.', [-.39, -1.28, .02], [.43, .43, .38], mats.cerebellum);
+            ball('نیم‌کره مخچه راست', 'نیم‌کره مقابل مخچه که در هماهنگی حرکات سمت چپ بدن نقش دارد.', [.39, -1.28, .02], [.43, .43, .38], mats.cerebellum);
+            ball('کرمینه مخچه', 'بخش میانی مخچه که دو نیم‌کره را به هم متصل می‌کند و در حفظ تعادل نقش اساسی دارد.', [0, -1.28, .36], [.14, .34, .12], mats.stem);
+            
+            for (let i = 0; i < 7; i++) {
+                const y = -1.02 - i * .075;
+                tube('چین‌های مخچه', 'چین‌های باریک سطح مخچه که به آن ظاهری برگ‌مانند داده و سطح آن را برای پردازش اطلاعات افزایش می‌دهند.', [[-.72, y, .18], [-.48, y - .035, .31], [-.22, y - .05, .39], [0, y - .055, .42], [.22, y - .05, .39], [.48, y - .035, .31], [.72, y, .18]], .022, mats.white);
+            }
+            
+            ball('بصل‌النخاع', 'بصل‌النخاع (Medulla Oblongata) پایین‌ترین بخش ساقه مغز است که مراکز حیاتی مانند تنفس و ضربان قلب را کنترل می‌کند.', [0, -1.82, -.04], [.22, .42, .22], mats.stem);
+            tube('نخاع', 'نخاع در ادامه بصل‌النخاع قرار دارد و وظیفه انتقال پیام‌های حسی و حرکتی بین مغز و بدن را بر عهده دارد.', [[0, -2.12, -.02], [0, -2.42, -.02], [0, -2.72, -.02]], .105, mats.nerve);
+            
+            return ['نیم‌کره مخی چپ', 'نیم‌کره مخی راست', 'شیار طولی بین دو نیم‌کره', 'پیاز بویایی چپ', 'پیاز بویایی راست', 'شکنج قشر مخ', 'شیار عرضی', 'نیم‌کره مخچه چپ', 'نیم‌کره مخچه راست', 'کرمینه مخچه', 'چین‌های مخچه', 'بصل‌النخاع', 'نخاع'];
+        }
+
+        function buildVentral() {
+            document.querySelector('#sceneTitle').textContent = 'نمای شکمی (زیرین) مغز گوسفند';
+            document.querySelector('#panelTitle').textContent = 'ساختارهای نمای شکمی';
+            document.querySelector('#intro').textContent = 'در نمای زیرین، ساختارهایی مانند پیازهای بویایی، کیاسمای بینایی، پل مغزی و مخچه قابل مشاهده هستند.';
+            
+            ball('سطح زیرین نیم‌کره مخی چپ', 'بخش چپ سطح زیرین نیم‌کره مخ که محل خروج برخی اعصاب مغزی است.', [-.78, .35, 0], [.82, 1.35, .5], mats.cortex);
+            ball('سطح زیرین نیم‌کره مخی راست', 'بخش راست سطح زیرین نیم‌کره مخ.', [.78, .35, 0], [.82, 1.35, .5], mats.cortex);
+            ball('پیاز بویایی چپ', 'در انتهای جلویی-زیرین مغز قرار دارد و سیگنال‌های بویایی را دریافت می‌کند.', [-.32, 1.42, .35], [.19, .32, .16], mats.gland);
+            ball('پیاز بویایی راست', 'مشابه سمت چپ، در پردازش بویایی نقش دارد.', [.32, 1.42, .35], [.19, .32, .16], mats.gland);
+            
+            tube('راه بویایی چپ و راست', 'مسیرهای عصبی که پیازهای بویایی را به نواحی بالاتر مغز متصل می‌کنند.', [[-.32, 1.2, .35], [-.48, .9, .4], [-.65, .65, .38], [.32, 1.2, .35], [.48, .9, .4], [.65, .65, .38]], .055, mats.nerve);
+            ball('کیاسمای بینایی', 'کیاسمای بینایی محل تقاطع رشته‌های عصبی عصب بینایی است. در این محل، رشته‌های نیمه داخلی چشم‌ها تقاطع می‌کنند.', [0, .45, .48], [.25, .13, .12], mats.nerve);
+            tube('عصب بینایی چپ', 'عصب بینایی اطلاعات بینایی را از شبکیه چشم چپ به مغز منتقل می‌کند.', [[-.18, .45, .4], [-.55, .2, .48], [-.9, -.02, .35]], .065, mats.nerve);
+            tube('عصب بینایی راست', 'عصب بینایی چشم راست که اطلاعات را به کیاسمای بینایی می‌فرستد.', [[.18, .45, .4], [.55, .2, .48], [.9, -.02, .35]], .065, mats.nerve);
+            
+            ball('میان‌مغز', 'میان‌مغز بخشی از ساقه مغز است که در تنظیم حرکات چشمی و پردازش اطلاعات شنوایی و بینایی نقش دارد.', [0, -.35, .05], [.3, .34, .3], mats.stem);
+            ball('پل مغزی', 'پل مغزی (Pons) برجستگی میانی ساقه مغز است که مرکز ارتباط بین مخ و مخچه بوده و در تنظیم تنفس نقش دارد.', [0, -.85, .05], [.48, .28, .34], mats.stem);
+            ball('بصل‌النخاع', 'بخش پایینی ساقه مغز که به نخاع متصل می‌شود و مراکز حیاتی مانند تنفس را کنترل می‌کند.', [0, -1.35, .05], [.25, .48, .24], mats.stem);
+            ball('مخچه', 'مخچه در نمای زیرین در پشت ساقه مغز دیده می‌شود و در هماهنگی حرکات و تعادل نقش دارد.', [0, -1.05, -.35], [.68, .43, .35], mats.cerebellum);
+            tube('نخاع', 'نخاع که در ادامه بصل‌النخاع به سمت پایین امتداد می‌یابد.', [[0, -1.75, .05], [0, -2.1, .05], [0, -2.45, .05]], .13, mats.nerve);
+            
+            return ['سطح زیرین نیم‌کره مخی چپ', 'سطح زیرین نیم‌کره مخی راست', 'پیاز بویایی چپ', 'پیاز بویایی راست', 'راه بویایی چپ و راست', 'کیاسمای بینایی', 'عصب بینایی چپ', 'عصب بینایی راست', 'میان‌مغز', 'پل مغزی', 'بصل‌النخاع', 'مخچه', 'نخاع'];
+        }
+
+        function buildInternal() {
+            document.querySelector('#sceneTitle').textContent = 'برش درونی مغز (میانی)';
+            document.querySelector('#panelTitle').textContent = 'ساختارهای مغز درونی';
+            document.querySelector('#intro').textContent = 'با برش میانی مغز، ساختارهای عمقی مانند جسم پینه‌ای، تالاموس، بطن‌ها و مخچه دیده می‌شوند.';
+            
+            ball('نیم‌کره برش‌خورده', 'نمای برش‌خورده نیم‌کره مخ که ساختارهای درونی آن قابل مشاهده است.', [0, 0, 0], [2.15, 1.45, .45], mats.cortex);
+            tube('جسم پینه‌ای', 'جسم پینه‌ای (Corpus Callosum) نوار ضخیمی از رشته‌های عصبی سفید است که دو نیم‌کره چپ و راست را به هم متصل کرده و ارتباط بین آن‌ها را برقرار می‌کند.', [[-1.25, .55, .42], [-.8, .95, .42], [0, 1.08, .42], [.8, .95, .42], [1.25, .55, .42]], .14, mats.white);
+            tube('رابط سه‌گوش (فورنیکس)', 'رابط سه‌گوش یا فورنیکس (Fornix) دسته‌ای از رشته‌های عصبی است که در زیر جسم پینه‌ای قرار گرفته و هیپوکامپ را به هیپوتالاموس متصل می‌کند.', [[-.85, .15, .5], [-.4, .35, .5], [0, .15, .5], [.55, -.25, .5], [.9, -.35, .5]], .075, mats.white);
+            ball('تالاموس', 'تالاموس بخشی از دستگاه عصبی مرکزی است که در اطراف بطن سوم قرار دارد و نقش کلیدی در انتقال و پردازش پیام‌های حسی (به جز بویایی) به قشر مغز دارد.', [0, -.05, .55], [.52, .38, .25], mats.gray);
+            ball('غده صنوبری', 'غده صنوبری یا اپی‌فیز در بخش پشتی تالاموس قرار دارد و در تنظیم چرخه خواب و بیداری با ترشح ملاتونین نقش دارد.', [.72, .45, .52], [.16, .18, .16], mats.gland);
+            ball('اجسام چهارقلو', 'اجسام چهارقلو در بخش پشتی میان‌مغز قرار دارند و شامل چهار برجستگی هستند که در مسیرهای بینایی و شنوایی نقش دارند.', [.78, .05, .48], [.28, .23, .18], mats.stem);
+            
+            tube('بطن جانبی', 'بطن‌های جانبی حفره‌های پر از مایع مغزی-نخاعی (CSF) درون نیم‌کره‌های مخ هستند.', [[-1.1, .25, .52], [-.65, .52, .55], [0, .55, .55], [.55, .3, .55]], .095, mats.fluid);
+            tube('بطن سوم', 'بطن سوم یک حفره باریک و میانی در ناحیه تالاموس است که از طریق مجرای سیلویوس به بطن چهارم متصل می‌شود.', [[0, .28, .62], [0, 0, .62], [0, -.35, .62]], .07, mats.fluid);
+            tube('بطن چهارم', 'بطن چهارم در فضای بین ساقه مغز و مخچه قرار دارد و مایع مغزی-نخاعی در آن جریان دارد.', [[0, -.55, .58], [.25, -.85, .58], [.1, -1.05, .58]], .09, mats.fluid);
+            
+            tube('درخت زندگی مخچه', 'درخت زندگی یا Arbor Vitae، ماده سفید شاخه‌دار درون مخچه است که ظاهری شبیه به درخت دارد.', [[0, -1.0, .48], [0, -1.25, .48], [-.35, -1.48, .48], [-.48, -1.7, .48], [0, -1.25, .48], [.35, -1.48, .48], [.48, -1.7, .48]], .055, mats.white);
+            ball('مخچه', 'مخچه در پشت ساقه مغز قرار دارد و در هماهنگی حرکات، تعادل و یادگیری حرکتی نقش دارد.', [0, -1.55, .15], [.72, .42, .38], mats.cerebellum);
+            ball('پل مغزی', 'بخشی از ساقه مغز که در جلوی مخچه قرار دارد.', [0, -.95, .15], [.35, .22, .25], mats.stem);
+            ball('بصل‌النخاع', 'بخش پایینی ساقه مغز که به نخاع متصل می‌شود.', [0, -1.28, .15], [.23, .35, .2], mats.stem);
+            
+            ball('جسم مخطط', 'جسم مخطط یا Corpus Striatum مجموعه‌ای از هسته‌های عمقی در نیم‌کره مخ است که در کنترل حرکات و تصمیم‌گیری نقش دارد.', [-.85, -.1, .57], [.28, .22, .15], mats.gland);
+            ball('شبکه کوروئیدی', 'شبکه کوروئیدی شبکه‌ای از مویرگ‌ها در بطن‌های مغزی است که مسئول تولید مایع مغزی-نخاعی است.', [.35, .42, .65], [.22, .08, .08], mats.nerve);
+            ball('رابط بین تالاموسی', 'رابط بین تالاموسی اتصال بین دو تالاموس است که در اکثر پستانداران وجود دارد.', [0, -.02, .72], [.16, .07, .07], mats.white);
+            ball('بطن جانبی چپ', 'حفره پر از مایع در نیم‌کره چپ.', [-.5, .42, .62], [.16, .09, .08], mats.fluid);
+            ball('بطن جانبی راست', 'حفره پر از مایع در نیم‌کره راست.', [.5, .42, .62], [.16, .09, .08], mats.fluid);
+            ball('ماده سفید مخ', 'ماده سفید بخش داخلی روشن‌تر نیم‌کره مخ است که حاوی آکسون‌های میلین‌دار است.', [-1.15, -.25, .42], [.38, .48, .12], mats.white);
+            ball('قشر خاکستری مخ', 'قشر خاکستری لایه بیرونی نیم‌کره مخ است که حاوی جسم سلولی نورون‌هاست.', [-1.48, -.2, .44], [.12, .55, .1], mats.gray);
+            
+            return ['جسم پینه‌ای', 'رابط سه‌گوش (فورنیکس)', 'تالاموس', 'غده صنوبری', 'اجسام چهارقلو', 'بطن جانبی', 'بطن سوم', 'بطن چهارم', 'درخت زندگی مخچه', 'مخچه', 'پل مغزی', 'بصل‌النخاع', 'جسم مخطط', 'شبکه کوروئیدی', 'رابط بین تالاموسی', 'بطن جانبی چپ', 'بطن جانبی راست', 'ماده سفید مخ', 'قشر خاکستری مخ'];
+        }
+
+        function buildCord() {
+            document.querySelector('#sceneTitle').textContent = 'مقطع عرضی نخاع';
+            document.querySelector('#panelTitle').textContent = 'ساختارهای مقطع نخاع';
+            document.querySelector('#intro').textContent = 'در مقطع عرضی نخاع، ماده خاکستری در مرکز (به شکل پروانه) و ماده سفید در پیرامون آن قرار دارد.';
+            
+            const oval = new THREE.Shape(); oval.absellipse(0, 0, 2.05, 1.55, 0, Math.PI * 2, false, 0);
+            const m = new THREE.Mesh(new THREE.ExtrudeGeometry(oval, { depth: .55, bevelEnabled: true, bevelSegments: 4, bevelSize: .08, bevelThickness: .07, curveSegments: 48 }), mats.white);
+            m.position.z = -.28; add(m, 'ماده سفید', 'ماده سفید نخاع در پیرامون ماده خاکستری قرار دارد و شامل راه‌های عصبی صعودی (حسی) و نزولی (حرکتی) است.', mats.white);
+            
+            const parts = [
+                ['شاخ پشتی راست', [[.1, 1.1], [.35, .9], [.75, .65], [1.2, .45], [1.35, .2], [.95, .22], [.5, .5], [.18, .62]]],
+                ['شاخ پشتی چپ', [[-.1, 1.1], [-.35, .9], [-.75, .65], [-1.2, .45], [-1.35, .2], [-.95, .22], [-.5, .5], [-.18, .62]]],
+                ['شاخ جانبی راست', [[.4, .25], [.8, .1], [1, -.15], [.8, -.35], [.45, -.12]]],
+                ['شاخ جانبی چپ', [[-.4, .25], [-.8, .1], [-1, -.15], [-.8, -.35], [-.45, -.12]]],
+                ['شاخ جلویی راست', [[.15, -.2], [.5, -.45], [.85, -.85], [.75, -1.1], [.45, -.95], [.15, -.55]]],
+                ['شاخ جلویی چپ', [[-.15, -.2], [-.5, -.45], [-.85, -.85], [-.75, -1.1], [-.45, -.95], [-.15, -.55]]]
+            ];
+            parts.forEach(([n, p]) => extrude(n, 'شاخ‌های ماده خاکستری نخاع محل تجمع جسم سلولی نورون‌ها هستند. شاخ‌های پشتی حسی و شاخ‌های جلویی حرکتی هستند.', p, .62, mats.gray, .04));
+            
+            ball('مجرای مرکزی', 'مجرای مرکزی نخاع، فضای باریکی در مرکز نخاع است که حاوی مایع مغزی-نخاعی است.', [0, -.03, .4], [.075, .075, .05], mats.fluid);
+            tube('شیار میانی پشتی', 'شیار میانی پشتی یک شیار کم‌عمق در سطح پشتی نخاع است.', [[0, 1.35, .35], [0, 1.55, .35]], .035, mats.stem);
+            tube('شکاف میانی جلویی', 'شکاف میانی جلویی یک شکاف عمیق‌تر در سطح جلویی نخاع است.', [[0, -1.2, .35], [0, -1.5, .35]], .06, mats.stem);
+            tube('ریشه پشتی', 'ریشه پشتی عصب نخاعی پیام‌های حسی را از گیرنده‌های بدن به نخاع وارد می‌کند.', [[1.2, .35, .05], [1.75, .58, .05], [2.2, .62, .05]], .07, mats.nerve);
+            tube('ریشه جلویی', 'ریشه جلویی عصب نخاعی پیام‌های حرکتی را از نخاع به ماهیچه‌ها می‌برد.', [[1.0, -.65, .05], [1.7, -.85, .05], [2.2, -.9, .05]], .07, mats.nerve);
+            ball('عقده ریشه پشتی', 'عقده ریشه پشتی (DRG) برجستگی روی ریشه پشتی است که جسم سلولی نورون‌های حسی در آن قرار دارد.', [1.82, .58, .05], [.18, .14, .13], mats.gland);
+            
+            return ['ماده سفید', 'شاخ پشتی راست', 'شاخ پشتی چپ', 'شاخ جانبی راست', 'شاخ جانبی چپ', 'شاخ جلویی راست', 'شاخ جلویی چپ', 'مجرای مرکزی', 'شیار میانی پشتی', 'شکاف میانی جلویی', 'ریشه پشتی', 'ریشه جلویی', 'عقده ریشه پشتی'];
+        }
+
+        function buildReflex() {
+            document.querySelector('#sceneTitle').textContent = 'قوس انعکاسی';
+            document.querySelector('#panelTitle').textContent = 'اجزای قوس انعکاسی';
+            document.querySelector('#intro').textContent = 'قوس انعکاسی مسیر عصبی است که در یک پاسخ غیرارادی (انعکاس) طی می‌شود.';
+            
+            ball('گیرنده حسی', 'گیرنده حسی ساختاری است که محرک (مانند گرما یا فشار) را دریافت و به پیام عصبی تبدیل می‌کند.', [-2.1, 1.1, 0], [.28, .28, .22], mats.gland);
+            ball('نورون حسی', 'نورون حسی پیام عصبی را از گیرنده به مرکز عصبی (نخاع) منتقل می‌کند.', [-1.1, .55, 0], [.22, .22, .18], mats.nerve);
+            ball('عقده ریشه پشتی', 'عقده ریشه پشتی محل قرارگیری جسم سلولی نورون حسی است.', [-.25, .9, 0], [.22, .22, .18], mats.gland);
+            ball('نخاع / مرکز انعکاس', 'نخاع مرکز اصلی بسیاری از پاسخ‌های انعکاسی است. اطلاعات حسی در آنجا پردازش و پاسخ حرکتی صادر می‌شود.', [0, 0, 0], [.62, .62, .25], mats.cortex);
+            ball('نورون رابط', 'نورون رابط در ماده خاکستری نخاع، ارتباط بین نورون حسی و نورون حرکتی را برقرار می‌کند.', [0, -.05, .3], [.18, .18, .14], mats.gray);
+            ball('نورون حرکتی', 'نورون حرکتی پیام عصبی را از نخاع به اندام پاسخ‌دهنده (ماهیچه) می‌برد.', [1.1, -.55, 0], [.22, .22, .18], mats.nerve);
+            ball('ماهیچه / اندام پاسخ‌دهنده', 'ماهیچه یا غده‌ای که با دریافت پیام حرکتی، پاسخ مناسب (مانند انقباض) را نشان می‌دهد.', [2.1, -1.1, 0], [.35, .25, .2], mats.cerebellum);
+            
+            tube('مسیر حسی', 'مسیر ورود پیام حسی از گیرنده به نخاع.', [[-1.85, 1.0, 0], [-1.1, .7, 0], [-.45, .35, 0], [0, .12, 0]], .065, mats.nerve);
+            tube('مسیر حرکتی', 'مسیر خروج پیام حرکتی از نخاع به اندام پاسخ‌دهنده.', [[.1, -.15, 0], [.65, -.45, 0], [1.2, -.65, 0], [1.85, -1.0, 0]], .065, mats.nerve);
+            
+            return ['گیرنده حسی', 'نورون حسی', 'عقده ریشه پشتی', 'نخاع / مرکز انعکاس', 'نورون رابط', 'نورون حرکتی', 'ماهیچه / اندام پاسخ‌دهنده', 'مسیر حسی', 'مسیر حرکتی'];
+        }
+
+        function buildSpinalNerves() {
+            document.querySelector('#sceneTitle').textContent = 'نخاع و اعصاب نخاعی گوسفند';
+            document.querySelector('#panelTitle').textContent = 'ساختارهای نخاع و اعصاب';
+            document.querySelector('#intro').textContent = 'نخاع درون کانال مهره‌ای قرار دارد و اعصاب نخاعی از آن منشعب می‌شوند.';
+            
+            tube('نخاع گوسفند', 'نخاع گوسفند در کانال مهره‌ای امتداد دارد و مرکز ارتباط بین مغز و دستگاه عصبی محیطی است.', [[-2.55, 0, 0], [-1.6, 0, 0], [-.6, 0, 0], [.45, 0, 0], [1.45, 0, 0], [2.35, 0, 0]], .24, mats.cortex);
+            
+            for (let i = 0; i < 13; i++) {
+                const x = -2.55 + i * .405;
+                tube('قوس مهره‌ای', 'قوس مهره‌ای ساختاری استخوانی است که کانال مهره‌ای را می‌سازد و از نخاع محافظت می‌کند.', [[x - .12, .55, 0], [x - .25, .82, 0], [x, .98, 0], [x + .25, .82, 0], [x + .12, .55, 0]], .065, mats.white);
+                tube('جسم مهره', 'جسم مهره بخش استخوانی ضخیم در سمت شکمی ستون مهره‌هاست.', [[x - .16, -.42, 0], [x, -.53, 0], [x + .16, -.42, 0]], .11, mats.white);
+            }
+            
+            const regions = [
+                { n: 'گردنی (۸ جفت)', count: 8, start: -2.35, step: .22 },
+                { n: 'سینه‌ای (۱۲ جفت)', count: 12, start: -.55, step: .19 },
+                { n: 'کمری (۵ جفت)', count: 5, start: 1.95, step: .18 },
+                { n: 'خاجی (۵ جفت)', count: 5, start: 2.55, step: .15 },
+                { n: 'دنبالچه‌ای (۱ جفت)', count: 1, start: 3.15, step: .15 }
+            ];
+            
+            regions.forEach((r, ri) => {
+                for (let i = 0; i < r.count; i++) {
+                    const x = r.start + i * r.step;
+                    const long = ri >= 2 ? .8 + (i * .09) : .62;
+                    
+                    tube(r.n + ' — ریشه پشتی', 'ریشه پشتی حاوی رشته‌های عصبی حسی است که پیام‌ها را به نخاع می‌آورند.', [[x, .12, .08], [x - .05, .36, .08], [x - long * .55, .57, .08], [x - long, .62, .08]], .033, mats.nerve);
+                    ball('عقده ریشه پشتی', 'عقده ریشه پشتی محل جسم سلولی نورون‌های حسی است.', [x - long * .63, .55, .13], [.095, .095, .09], mats.gland);
+                    tube(r.n + ' — ریشه شکمی', 'ریشه شکمی حاوی رشته‌های عصبی حرکتی است که پیام‌ها را از نخاع خارج می‌کنند.', [[x, -.12, .08], [x - .04, -.34, .08], [x - long * .55, -.48, .08], [x - long, -.5, .08]], .033, mats.nerve);
+                    tube('عصب نخاعی مختلط', 'با پیوستن ریشه پشتی و شکمی، عصب نخاعی مختلط تشکیل می‌شود.', [[x - long, -.5, .08], [x - long - .22, -.08, .08], [x - long - .32, .08, .08], [x - long - .25, .62, .08]], .05, mats.nerve);
+                    tube('شاخه پشتی', 'شاخه پشتی عصب نخاعی به پوست و ماهیچه‌های پشتی عصب‌رسانی می‌کند.', [[x - long - .25, .08, .08], [x - long - .48, .26, .08], [x - long - .72, .3, .08]], .04, mats.cerebellum);
+                    tube('شاخه شکمی', 'شاخه شکمی عصب نخاعی به بخش‌های جانبی و شکمی بدن عصب‌رسانی می‌کند.', [[x - long - .25, .08, .08], [x - long - .48, -.17, .08], [x - long - .75, -.3, .08]], .045, mats.cerebellum);
+                }
+            });
+            
+            tube('انتهای دمی نخاع', 'انتهای نخاع در ناحیه دمی.', [[2.2, 0, 0], [2.55, 0, 0], [2.82, -.04, 0]], .14, mats.stem);
+            
+            return ['نخاع گوسفند', 'قوس مهره‌ای', 'جسم مهره', 'گردنی (۸ جفت)', 'سینه‌ای (۱۲ جفت)', 'کمری (۵ جفت)', 'خاجی (۵ جفت)', 'ریشه پشتی', 'عقده ریشه پشتی', 'ریشه شکمی', 'عصب نخاعی مختلط', 'شاخه پشتی', 'شاخه شکمی', 'انتهای دمی نخاع'];
+        }
+
+        function buildCranial() {
+            document.querySelector('#sceneTitle').textContent = '۱۲ جفت عصب مغزی';
+            document.querySelector('#panelTitle').textContent = 'اعصاب مغزی';
+            document.querySelector('#intro').textContent = '۱۲ جفت عصب مغزی از مغز یا ساقه مغز منشأ می‌گیرند و به بخش‌های مختلف سر و گردن عصب‌رسانی می‌کنند.';
+            
+            ball('مغز', 'نمای ساده‌شده‌ای از مغز.', [0, .5, 0], [1.25, .8, .42], mats.cortex);
+            tube('ساقه مغز', 'ساقه مغز بخش پایینی مغز است که به نخاع متصل می‌شود.', [[0, 0, 0], [0, -.6, 0], [0, -1.2, 0]], .22, mats.stem);
+            
+            const names = [
+                ['عصب بویایی (I)', 'عصب بویایی مسئول انتقال حس بویایی از بینی به مغز است.'],
+                ['عصب بینایی (II)', 'عصب بینایی اطلاعات بینایی را از شبکیه به مغز منتقل می‌کند.'],
+                ['عصب حرکتی چشم (III)', 'عصب حرکتی چشم (اکولوموتور) حرکات چشم و تنظیم مردمک را کنترل می‌کند.'],
+                ['عصب قرقره‌ای (IV)', 'عصب قرقره‌ای (تروکلئار) یکی از ماهیچه‌های چشم را عصب‌دهی می‌کند.'],
+                ['عصب سه‌قلو (V)', 'عصب سه‌قلو (تری‌ژمینال) حس صورت و فعالیت ماهیچه‌های جویدن را کنترل می‌کند.'],
+                ['عصب دورکننده (VI)', 'عصب دورکننده (ابداکنس) حرکت چشم به سمت خارج را ممکن می‌سازد.'],
+                ['عصب چهره‌ای (VII)', 'عصب چهره‌ای (فاسیال) حرکات حالت‌های چهره و بخشی از چشایی را کنترل می‌کند.'],
+                ['عصب دهلیزی‌حلزونی (VIII)', 'عصب دهلیزی-حلزونی (وستیبولار) مسئول شنوایی و تعادل است.'],
+                ['عصب زبانی‌حلقی (IX)', 'عصب زبانی-حلقی (گلوسوفارنژیال) در چشایی و عملکرد حلق نقش دارد.'],
+                ['عصب واگ (X)', 'عصب واگ ارتباط عصبی با اندام‌های زیادی در قفسه سینه و شکم را برقرار می‌کند.'],
+                ['عصب فرعی (XI)', 'عصب فرعی (اکسسوری) حرکت برخی ماهیچه‌های گردن و شانه را کنترل می‌کند.'],
+                ['عصب زیرزبانی (XII)', 'عصب زیرزبانی (هیپوگلوسال) حرکات ماهیچه‌های زبان را کنترل می‌کند.']
+            ];
+            
+            names.forEach(([n, d], i) => {
+                const side = i % 2 === 0 ? -1 : 1;
+                const row = Math.floor(i / 2);
+                const y = .5 - row * .34;
+                const endx = side * (1.15 + (i % 3) * .12);
+                tube(n, d, [[side * .55, y + .05, .18], [side * .9, y - .05, .1], [endx, y - .22, .04]], .045, mats.nerve);
+            });
+            
+            return names.map(x => x[0]);
+        }
+
+        const builders = { external: buildExternal, ventral: buildVentral, internal: buildInternal, cord: buildCord, reflex: buildReflex, spinalNerves: buildSpinalNerves, cranial: buildCranial };
+        
+        const activitySteps = [
+            {title:'وسایل و آماده‌سازی',body:`<p>وسایل لازم طبق کتاب: <b>مغز سالم گوسفند (یا گوساله)، ابزار تشریح و دستکش</b>. آماده‌سازی مغز را با راهنمایی معلم انجام دهید.</p>`},
+            {title:'بررسی بیرونی ـ سطح پشتی',body:`<p>مغز را مطابق شکل کتاب قرار دهید. بقایای پرده‌های مغزی را مشاهده و سپس با دقت جدا کنید تا شیارها دیده شوند.</p><p><b>ساختارهای قابل شناسایی:</b></p><span class="pill">نیم‌کره راست و چپ مخ</span><span class="pill">شیار بین دو نیم‌کره</span><span class="pill">لوب‌های بویایی</span><span class="pill">مخچه</span><span class="pill">نیم‌کره‌های مخچه</span><span class="pill">کرمینه</span><span class="pill">بصل‌النخاع</span><span class="pill">نخاع</span>`},
+            {title:'بررسی بیرونی ـ سطح شکمی',body:`<p>مغز را برگردانید و پرده‌های مغزی را به‌آرامی جدا کنید؛ سپس ساختارهای سطح زیرین را مشاهده کنید.</p><span class="pill">لوب‌های بویایی</span><span class="pill">تصالب بینایی</span><span class="pill">مغز میانی</span><span class="pill">پل مغزی</span><span class="pill">مخچه</span>`},
+            {title:'بررسی درونی ـ جسم پینه‌ای',body:`<p>سطح پشتی مغز را رو به بالا قرار دهید. با شست‌ها دو نیم‌کره را در امتداد شیار طولی به‌آرامی از هم باز کنید تا <b>جسم پینه‌ای</b> سفیدرنگ دیده شود.</p>`},
+            {title:'بررسی درونی ـ رابط سه‌گوش',body:`<p>در جلوی جسم پینه‌ای برشی کم‌عمق ایجاد کنید تا <b>رابط سه‌گوش (فورنیکس)</b> در زیر جسم پینه‌ای دیده شود.</p>`},
+            {title:'بطن‌ها و جسم مخطط',body:`<p>در دو طرف این رابط‌ها، فضاهای <b>بطن‌های ۱ و ۲</b> دیده می‌شوند. <b>جسم مخطط</b> درون آن‌ها قرار دارد.</p>`},
+            {title:'تالاموس‌ها و بطن سوم',body:`<p>در امتداد طولی رابط سه‌گوش برش دهید تا <b>تالاموس‌ها</b> دیده شوند. در پشت تالاموس‌ها <b>بطن سوم</b> قرار دارد.</p>`},
+            {title:'کرمینه و درخت زندگی',body:`<p>در مرحله پایانی، کرمینه را در امتداد شیار طولی برش دهید تا <b>درخت زندگی</b> و <b>بطن چهارم</b> مشاهده شوند.</p>`}
+        ];
+
+        function showActivityGuide() {
+            const guide = document.querySelector('#activityGuide');
+            guide.innerHTML = `<div class="guideHead"><h2>فعالیت ۷ ـ تشریح مغز گوسفند</h2><p>راهنمای مرحله‌به‌مرحله بر اساس متن و شکل‌های کتاب درسی.</p></div>` +
+                activitySteps.map((x, i) => `<div class="step" id="guideStep${i}"><h3>${i + 1}. ${x.title}</h3>${x.body}</div>`).join('');
+            document.querySelector('#panelTitle').textContent = 'فهرست مراحل تشریح';
+            document.querySelector('#intro').textContent = 'برای مشاهده جزئیات هر مرحله، روی آن کلیک کنید.';
+            
+            const list = document.querySelector('#items'); list.innerHTML = '';
+            activitySteps.forEach((x, i) => {
+                const b = document.createElement('button'); b.textContent = (i + 1) + '. ' + x.title; b.style.display = 'block'; b.style.width = '100%'; b.style.textAlign = 'right'; b.style.margin = '6px 0';
+                b.onclick = () => {
+                    document.querySelectorAll('#activityGuide .step').forEach(e => e.style.borderColor = '#29496d');
+                    const el = document.querySelector('#guideStep' + i); el.style.borderColor = '#67b5ff'; el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.querySelector('#info').innerHTML = '<b>' + x.title + '</b>' + x.body;
+                };
+                list.appendChild(b);
+            });
+            document.querySelector('#info').innerHTML = '<b>راهنما</b><p>یکی از مراحل را انتخاب کنید.</p>';
+        }
+
+        function load(id) {
+            current = id;
+            const canvasDiv = document.querySelector('#threejs-canvas'), realModel = document.querySelector('#realModel'), guide = document.querySelector('#activityGuide');
+            
+            if (id === 'activity') {
+                canvasDiv.style.display = 'none'; realModel.style.display = 'none'; guide.style.display = 'block';
+                showActivityGuide();
+                return;
+            }
+            guide.style.display = 'none'; canvasDiv.style.display = 'block';
+
+            if (id === 'sheepModel') {
+                guide.style.display = 'none'; canvasDiv.style.display = 'none'; realModel.style.display = 'block';
+                document.querySelector('#sceneTitle').textContent = 'مدل سه‌بعدی تعاملی آنلاین';
+                document.querySelector('#panelTitle').textContent = 'مدل مرجع (EasyAnatomyLab)';
+                document.querySelector('#intro').textContent = 'این مدل تعاملی توسط سایت EasyAnatomyLab ارائه شده و امکان چرخش و بررسی دقیق ساختارهای مغز گوسفند را فراهم می‌کند.';
+                document.querySelector('#items').innerHTML = '<p style="font-size:13px;">مدل تعاملی اصلی در حال بارگذاری است. از کنترل‌های داخل مدل برای چرخش، بزرگ‌نمایی و انتخاب ساختارها استفاده کنید.</p>';
+                document.querySelector('#info').innerHTML = '<b>توجه</b><p>نام‌گذاری و شرح‌های خود مدل انگلیسی است. برای ترجمه فارسی، از تب‌های دیگر استفاده کنید.</p>';
+                return;
+            }
+            
+            realModel.style.display = 'none'; resetObjects(); camera.position.set(0, 1.1, 7.5); controls.target.set(0, 0, 0); controls.update();
+            const names = builders[id](); const list = document.querySelector('#items'); list.innerHTML = '';
+            names.forEach(n => { const b = document.createElement('button'); b.textContent = n; b.onclick = () => select(n); list.appendChild(b); });
+            document.querySelector('#info').innerHTML = '<b>راهنما</b><p>یک ساختار را انتخاب کنید تا توضیحات کامل آن نمایش داده شود.</p>';
+        }
+
+        function resize() {
+            const w = host.clientWidth, h = host.clientHeight;
+            camera.aspect = w / h; camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }
+
+        // شروع
+        initThree();
+        new ResizeObserver(resize).observe(host);
+        load('external');
+        resize();
+        renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+    </script>
+</body>
+</html>
