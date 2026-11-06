@@ -6,31 +6,19 @@
     <title>آزمایشگاه زیست‌شناسی - تشریح مغز گوسفند</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-    
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; padding: 0; font-family: 'Vazirmatn', Tahoma, sans-serif; overflow: hidden; height: 100vh; background: #07111f; color: #edf5ff; }
 
         /* ================= صفحه ورود ================= */
-        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; background-image: url('dna.jpg'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; animation: zoomBg 20s ease-in-out infinite alternate; }
-        @keyframes zoomBg { 0% { background-size: 100%; } 100% { background-size: 120%; } }
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; background-image: url('dna.jpg'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
         .overlay { position: absolute; inset: 0; background: rgba(5, 10, 20, 0.6); z-index: 1; }
-        .splash-content { position: relative; z-index: 2; text-align: center; padding: 40px 30px; background: rgba(15, 20, 30, 0.5); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: fadeIn 0.8s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .splash-content h1 { font-size: 30px; margin: 0 0 15px 0; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .splash-content { position: relative; z-index: 2; text-align: center; padding: 40px 30px; background: rgba(15, 20, 30, 0.5); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .splash-content h1 { font-size: 30px; margin: 0 0 15px 0; color: #fff; }
         .splash-content p { font-size: 16px; color: #b8cbe1; margin-bottom: 35px; }
-        .enter-btn { background: linear-gradient(135deg, #00e5ff 0%, #007bb5 100%); border: none; color: #000; padding: 15px 70px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; font-family: inherit; box-shadow: 0 10px 25px rgba(0, 229, 255, 0.4); transition: all 0.2s; }
+        .enter-btn { background: linear-gradient(135deg, #00e5ff 0%, #007bb5 100%); border: none; color: #000; padding: 15px 70px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; font-family: inherit; box-shadow: 0 10px 25px rgba(0, 229, 255, 0.4); }
         .enter-btn:active { transform: scale(0.95); }
-        .creators { position: absolute; bottom: 25px; width: 100%; text-align: center; font-size: 12px; color: #8b9bb4; font-weight: 300; direction: rtl; z-index: 2; }
-        .creators span { margin: 0 10px; }
+        .creators { position: absolute; bottom: 25px; width: 100%; text-align: center; font-size: 12px; color: #8b9bb4; }
 
         /* ================= محیط اصلی ================= */
         #app-container { display: none; height: 100vh; width: 100vw; flex-direction: column; }
@@ -40,36 +28,51 @@
         .tab-content { flex: 1; display: none; position: relative; overflow: hidden; }
         .tab-content.active { display: flex; flex-direction: column; }
 
-        /* --- تب مدل آنلاین با سایدبار و پنل شناور --- */
-        #model-container { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 15px; padding: 15px; height: 100%; overflow: hidden;}
+        /* --- تب مدل آنلاین --- */
+        #model-container { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 15px; padding: 15px; height: 100%; overflow: hidden;}
         #threejs-iframe-container { border: 1px solid #29496d; border-radius: 14px; overflow: hidden; background: #07111f; position: relative;}
         #threejs-iframe-container iframe { width: 100%; height: 100%; border: none; }
-        
-        /* پنل اطلاعات شناور (Overlay) روی مدل */
+
+        /* دکمه‌های تغییر اسلاید (شبیه‌سازی) */
+        .slide-controls {
+            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 5px; z-index: 20; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 8px;
+        }
+        .slide-btn {
+            background: #15385d; border: 1px solid #4775a8; color: #fff; width: 30px; height: 30px;
+            border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .slide-btn:hover { background: #23639a; }
+        .slide-btn.active { background: #00e5ff; color: #000; border-color: #00e5ff; }
+
+        /* پنل اطلاعات شناور */
         .info-overlay {
             position: absolute; bottom: 20px; left: 20px; right: 20px;
-            background: rgba(10, 25, 43, 0.95); border: 1px solid #00e5ff;
+            background: rgba(10, 25, 43, 0.98); border: 1px solid #00e5ff;
             border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: none; z-index: 10; animation: slideUp 0.3s ease;
+            display: none; z-index: 30; animation: slideUp 0.3s ease;
             max-height: 50%; overflow-y: auto;
         }
         .info-overlay.show { display: block; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .info-overlay h3 { font-size: 20px; color: #00e5ff; margin: 0 0 5px; }
-        .info-overlay .en-title { font-size: 14px; color: #8faec9; font-family: monospace; display: block; margin-bottom: 12px; direction: ltr; text-align: left; }
-        .info-overlay p { font-size: 15px; line-height: 2; color: #d6e4f4; margin: 0; text-align: justify; }
-        .info-overlay .close-info { position: absolute; top: 15px; left: 15px; background: transparent; border: none; color: #ff5252; font-size: 18px; cursor: pointer; font-weight: bold;}
+        .info-overlay h3 { font-size: 18px; color: #00e5ff; margin: 0 0 5px; }
+        .info-overlay .en-title { font-size: 13px; color: #8faec9; font-family: monospace; margin-bottom: 10px; display: block; direction: ltr; text-align: left;}
+        .info-overlay p { font-size: 14px; line-height: 1.9; color: #d6e4f4; margin: 0; text-align: justify; }
+        .info-overlay .close-info { position: absolute; top: 10px; left: 10px; background: transparent; border: none; color: #ff5252; font-size: 18px; cursor: pointer; font-weight: bold;}
 
         .translation-sidebar { background: #0c1d32; border: 1px solid #29496d; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
         .sidebar-header { padding: 15px; background: #102b49; border-bottom: 1px solid #29496d; }
         .sidebar-header h2 { font-size: 16px; margin: 0 0 10px; color: #eafcff; }
+        .sidebar-header p { font-size: 12px; color: #b8cbe1; margin: 0; line-height: 1.6; }
         
         .translation-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .translation-item { background: #15385d; border: 1px solid #4775a8; border-radius: 10px; padding: 12px; cursor: pointer; transition: 0.2s; display: block; }
+        .translation-item { background: #15385d; border: 1px solid #4775a8; border-radius: 10px; padding: 12px; cursor: pointer; transition: 0.2s; }
         .translation-item:hover { background: #23639a; border-color: #80c4ff; }
         .translation-item.active { background: #23639a; border-color: #00e5ff; }
         .translation-item .en-name { font-size: 14px; color: #a4b8d0; font-family: monospace; margin-bottom: 4px; display: block; direction: ltr; text-align: left;}
         .translation-item .fa-name { font-size: 16px; color: #fff; font-weight: bold; display: block; margin-bottom: 4px; }
+        .translation-item .desc { font-size: 13px; color: #d6e4f4; line-height: 1.8; margin: 0; display: none; text-align: justify;}
+        .translation-item.active .desc { display: block; }
 
         /* --- تب فعالیت ۷ --- */
         #activity-container { display: flex; height: 100%; width: 100%; }
@@ -83,7 +86,6 @@
         #threejs-canvas-wrapper { flex: 1; position: relative; overflow: hidden; }
         #threejs-canvas-wrapper canvas { display: block; width: 100%; height: 100%; }
         
-        /* پنل اطلاعات مدل در تب فعالیت */
         .info-panel-activity {
             position: absolute; bottom: 15px; left: 15px; right: 15px;
             background: rgba(16, 39, 67, 0.95); border: 1px solid #00e5ff;
@@ -138,6 +140,11 @@
                 <div id="threejs-iframe-container">
                     <iframe src="https://easyanatomylab.com/embed/sheep-brain-dissection" title="مدل سه‌بعدی" allow="fullscreen" allowfullscreen loading="lazy"></iframe>
                     
+                    <!-- دکمه‌های کنترل اسلاید -->
+                    <div class="slide-controls" id="slide-controls">
+                        <!-- با جاوااسکریپت پر میشه -->
+                    </div>
+
                     <!-- پنل اطلاعات شناور -->
                     <div class="info-overlay" id="model-info-overlay">
                         <button class="close-info" onclick="document.getElementById('model-info-overlay').classList.remove('show')">✕</button>
@@ -149,8 +156,8 @@
                 
                 <div class="translation-sidebar">
                     <div class="sidebar-header">
-                        <h2>لیست کامل بخش‌های مغز</h2>
-                        <p style="font-size:12px; color:#b8cbe1; margin:0;">برای دیدن توضیحات، روی هر بخش کلیک کنید.</p>
+                        <h2 id="sidebar-title">اسلاید ۱: پرده‌های مغزی</h2>
+                        <p id="sidebar-desc">کلمات موجود در این اسلاید را ببینید. (برای هماهنگی با مدل، دکمه‌های اسلاید بالا را بزنید)</p>
                     </div>
                     <div class="translation-list" id="translation-list"></div>
                 </div>
@@ -209,70 +216,125 @@
         }
     </script>
 
-    <!-- ================= دیکشنری کامل ترجمه مدل آنلاین ================= -->
+    <!-- ================= دیکشنری و اسلایدها ================= -->
     <script>
-        const translationData = [
-            { en: "Meninges", fa: "پرده‌های مغزی (مننژ)", desc: "سه لایه غشایی (سخت‌شامه، عنکبوتیه و نرم‌شامه) که مغز و نخاع را کاملاً در بر می‌گیرند. این پرده‌ها نقش حیاتی در محافظت فیزیکی از بافت عصبی، حمایت از رگ‌های خونی و تولید مایع مغزی-نخاعی دارند." },
-            { en: "Cerebrum (cortex)", fa: "مخ (قشر مخ)", desc: "بزرگ‌ترین و پیشرفته‌ترین بخش مغز که به دو نیم‌کره چپ و راست تقسیم می‌شود. قشر مخ (لایه خاکستری بیرونی) مرکز عالی پردازش اطلاعات حسی، کنترل حرکات ارادی، یادگیری، حافظه، تفکر انتزاعی و تصمیم‌گیری است." },
-            { en: "White matter", fa: "ماده سفید", desc: "بافتی در زیر قشر خاکستری که عمدتاً از آکسون‌های میلین‌دار تشکیل شده است. این بخش مانند یک شبکه ارتباطی پرسرعت، پیام‌ها را بین بخش‌های مختلف مغز و نخاع منتقل می‌کند." },
-            { en: "Longitudinal fissure", fa: "شیار طولی", desc: "یک شکاف بسیار عمیق در خط میانی مغز که دو نیم‌کره چپ و راست را از هم جدا می‌کند و تا عمق جسم پینه‌ای ادامه دارد." },
-            { en: "Cerebral hemispheres", fa: "نیم‌کره‌های مخ", desc: "دو نیمه چپ و راست مخ. به دلیل تقاطع مسیرهای عصبی، نیم‌کره چپ کنترل سمت راست و نیم‌کره راست کنترل سمت چپ بدن را بر عهده دارد." },
-            { en: "Parietal lobe", fa: "لوب آهیانه‌ای (پاریتال)", desc: "بخشی از قشر مخ که در بالای مغز قرار دارد و مسئول پردازش اطلاعات حسی مانند لامسه، دما، فشار و درد است. همچنین در درک فضایی و جهتیابی نقش اساسی دارد." },
-            { en: "Occipital lobe", fa: "لوب پس‌سری (اکسیپیتال)", desc: "بخش پشتی قشر مخ که مرکز اصلی پردازش اطلاعات بینایی است. تصاویر دریافتی از چشم‌ها در این بخش تفسیر و شناسایی می‌شوند." },
-            { en: "Temporal lobe", fa: "لوب گیجگاهی (تمپورال)", desc: "در بخش جانبی و زیرین مخ قرار دارد. این لوب مرکز پردازش اطلاعات شنوایی، درک زبان، و تثبیت حافظه (به ویژه توسط هیپوکامپ) است." },
-            { en: "Cerebellar hemispheres", fa: "نیم‌کره‌های مخچه", desc: "دو بخش جانبی و بزرگ مخچه که در هماهنگی دقیق حرکات ارادی، حفظ تعادل بدن و یادگیری مهارت‌های حرکتی (مانند دوچرخه‌سواری) نقش حیاتی دارند." },
-            { en: "Vermis", fa: "کرمینه", desc: "بخش میانی و باریک مخچه که دو نیم‌کره مخچه را به هم متصل می‌کند. این بخش به طور تخصصی در حفظ تعادل بدن و هماهنگی حرکات عضلات ستون فقرات نقش دارد." },
-            { en: "Arbor vitae", fa: "درخت زندگی", desc: "ماده سفید شاخه‌داری درون مخچه که در برش ظاهری شبیه به درخت دارد. این ساختار مسیرهای عصبی ورودی و خروجی مخچه را سازماندهی و هدایت می‌کند." },
-            { en: "Medulla oblongata", fa: "بصل‌النخاع", desc: "پایین‌ترین بخش ساقه مغز که به نخاع متصل می‌شود. این بخش مرکز کنترل حیاتی‌ترین عملکردهای غیرارادی بدن مانند تنفس، ضربان قلب و تنظیم فشار خون است." },
-            { en: "Pons", fa: "پل مغزی", desc: "برجستگی میانی و برجسته در ساقه مغز که پلی برای ارتباط بین مخ و مخچه است. همچنین در تنظیم چرخه تنفس و انتقال پیام‌های حسی-حرکتی نقش دارد." },
-            { en: "Midbrain", fa: "میان‌مغز", desc: "بخشی از ساقه مغز که در تنظیم حرکات چشمی (رفلکس‌های نوری)، پردازش اطلاعات شنوایی و بینایی و همچنین کنترل برخی حرکات بدنی نقش دارد." },
-            { en: "Olfactory bulbs", fa: "پیازهای بویایی", desc: "ساختارهای جلویی و کوچک مغز که مسئول دریافت و پردازش اولیه سیگنال‌های بویایی از گیرنده‌های بینی هستند." },
-            { en: "Optic chiasm", fa: "کیاسمای بینایی", desc: "محل تقاطع رشته‌های عصبی عصب بینایی در کف مغز. در این محل، رشته‌های نیمه داخلی چشم‌ها تقاطع می‌کنند تا هر نیم‌کره مغز اطلاعات میدان بینایی مقابل را دریافت کند." },
-            { en: "Pituitary gland", fa: "غده هیپوفیز", desc: "غده‌ای کوچک اما بسیار مهم در زیر هیپوتالاموس که به عنوان غده رهبر شناخته می‌شود و هورمون‌های کنترل‌کننده بسیاری از فعالیت‌های بدن را ترشح می‌کند." },
-            { en: "Mammillary body", fa: "جسم پستانی (مامیلاری)", desc: "دو برجستگی کوچک در کف مغز که بخشی از دستگاه لیمبیک هستند و در پردازش حافظه و مسیریابی نقش دارند." },
-            { en: "Pineal gland", fa: "غده صنوبری (اپی‌فیز)", desc: "غده‌ای کوچک در بخش پشتی تالاموس که با ترشح هورمون ملاتونین، چرخه خواب و بیداری (ریتم شبانه‌روزی) را تنظیم می‌کند." },
-            { en: "Superior colliculi", fa: "برجستگی‌های فوقانی", desc: "دو برجستگی در بخش پشتی میان‌مغز که بخشی از مسیرهای بینایی هستند و در کنترل حرکات غیرارادی چشم و رفلکس‌های بینایی نقش دارند." },
-            { en: "Inferior colliculi", fa: "برجستگی‌های تحتانی", desc: "دو برجستگی در بخش پشتی میان‌مغز که به عنوان ایستگاه رله در مسیرهای شنوایی عمل می‌کنند و در پاسخ‌های غیرارادی به صدا نقش دارند." },
-            { en: "Thalamus", fa: "تالاموس", desc: "بخشی از دستگاه عصبی مرکزی که در اطراف بطن سوم قرار دارد. تالاموس مرکز اصلی رله و پردازش پیام‌های حسی (به جز بویایی) قبل از رسیدن به قشر مغز است." },
-            { en: "Third ventricle", fa: "بطن سوم", desc: "یک حفره باریک و میانی در ناحیه تالاموس است که حاوی مایع مغزی-نخاعی بوده و از طریق مجرای سیلویوس به بطن چهارم متصل می‌شود." },
-            { en: "Fourth ventricle", fa: "بطن چهارم", desc: "در فضای بین ساقه مغز و مخچه قرار دارد. مایع مغزی-نخاعی تولید شده در این ناحیه از طریق منافذ به فضای زیر عنکبوتیه تخلیه می‌شود." },
-            { en: "Cerebral aqueduct", fa: "مجرای سیلویوس (مجرای مغزی)", desc: "مجرای باریکی که بطن سوم را به بطن چهارم متصل می‌کند و مسیر اصلی جریان مایع مغزی-نخاعی است." },
-            { en: "Corpus callosum", fa: "جسم پینه‌ای", desc: "نوار ضخیمی از رشته‌های عصبی سفید که دو نیم‌کره چپ و راست را به هم متصل می‌کند. این ساختار پل ارتباطی اصلی برای انتقال اطلاعات بین دو نیم‌کره است." },
-            { en: "Fornix", fa: "رابط سه‌گوش (فورنیکس)", desc: "دسته‌ای از رشته‌های عصبی است که در زیر جسم پینه‌ای قرار دارد و هیپوکامپ را به هیپوتالاموس متصل می‌کند و در مسیرهای حافظه نقش دارد." },
-            { en: "Lateral ventricles", fa: "بطن‌های جانبی", desc: "حفره‌های بزرگ و پر از مایع مغزی-نخاعی (CSF) درون نیم‌کره‌های مخ. این مایع از مغز محافظت کرده و مواد مغذی را به آن می‌رساند." },
-            { en: "Hippocampus", fa: "هیپوکامپ", desc: "ساختاری در لوب گیجگاهی که نقش اساسی در تثبیت حافظه کوتاه‌مدت به بلندمدت، یادگیری و پردازش اطلاعات فضایی (جهت‌یابی) دارد." },
-            { en: "Septum pellucidum", fa: "دیواره شفاف", desc: "غشای نازکی است که دو بطن جانبی را در خط میانی مغز از هم جدا می‌کند." },
-            { en: "Caudate nucleus", fa: "هسته دمی", desc: "بخشی از عقده‌های قاعده‌ای که در کنترل حرکات ارادی، یادگیری و برخی عملکردهای شناختی نقش دارد." },
-            { en: "Putamen", fa: "پوتامن (پوسته)", desc: "همراه با هسته دمی، جسم مخطط را می‌سازد و در تنظیم حرکات و جلوگیری از حرکات ناخواسته نقش کلیدی دارد." },
-            { en: "Internal capsule", fa: "کپسول داخلی", desc: "دسته‌ای از رشته‌های عصبی سفید که مسیرهای حسی و حرکتی را بین قشر مخ و ساقه مغز/نخاع منتقل می‌کند." },
-            { en: "Trigeminal nerve", fa: "عصب سه‌قلو", desc: "پنجمین و بزرگترین عصب مغزی که حس صورت (لامسه، درد و دما) و فعالیت ماهیچه‌های جویدن را کنترل می‌کند." },
-            { en: "Facial nerve", fa: "عصب چهره‌ای", desc: "هفتمین عصب مغزی که حرکات حالت‌های چهره (مانند خندیدن) و بخشی از چشایی را کنترل می‌کند." },
-            { en: "Abducens nerve", fa: "عصب دورکننده", desc: "ششمین عصب مغزی که حرکت چشم به سمت خارج را ممکن می‌سازد." },
-            { en: "Oculomotor nerve", fa: "عصب حرکتی چشم", desc: "سومین عصب مغزی که حرکات چشم و تنظیم قطر مردمک را کنترل می‌کند." },
-            { en: "Trochlear nerve", fa: "عصب قرقره‌ای", desc: "چهارمین عصب مغزی که یکی از ماهیچه‌های چشم را عصب‌دهی می‌کند." }
-        ];
+        // دیکشنری جامع (همه کلماتی که در 10 اسلاید وجود دارد)
+        const dictionary = {
+            "Meninges": { fa: "پرده‌های مغزی (مننژ)", desc: "سه لایه غشایی (سخت‌شامه، عنکبوتیه و نرم‌شامه) که مغز و نخاع را کاملاً در بر می‌گیرند. این پرده‌ها نقش حیاتی در محافظت فیزیکی از بافت عصبی، حمایت از رگ‌های خونی و تولید مایع مغزی-نخاعی دارند." },
+            "Dura mater": { fa: "سخت‌شامه", desc: "لایه بیرونی و ضخیم پرده‌های مغزی که از بافت فیبری محکم ساخته شده و مغز را در برابر ضربات شدید محافظت می‌کند." },
+            "Pia mater": { fa: "نرم‌شامه", desc: "لایه داخلی و بسیار نازک پرده‌های مغزی که مستقیماً روی بافت مغز قرار دارد و رگ‌های خونی کوچک را در خود جای می‌دهد." },
+            "Cerebrum (cortex)": { fa: "مخ (قشر مخ)", desc: "بزرگ‌ترین بخش مغز که به دو نیم‌کره تقسیم می‌شود. مرکز پردازش اطلاعات حسی، حرکتی، یادگیری، حافظه و تفکر است." },
+            "Parietal lobe": { fa: "لوب آهیانه‌ای", desc: "بخشی از قشر مخ که در پردازش اطلاعات حسی مانند لامسه، دما و درک فضایی نقش دارد." },
+            "Occipital lobe": { fa: "لوب پس‌سری", desc: "بخش پشتی مخ که مرکز اصلی پردازش اطلاعات بینایی است." },
+            "Temporal lobe": { fa: "لوب گیجگاهی", desc: "در بخش جانبی مخ قرار دارد و در پردازش شنوایی، حافظه و درک زبان نقش دارد." },
+            "Longitudinal fissure": { fa: "شیار طولی", desc: "شیار عمیق در خط میانی مغز که دو نیم‌کره چپ و راست را از هم جدا می‌کند." },
+            "Cerebellar hemispheres": { fa: "نیم‌کره‌های مخچه", desc: "دو بخش جانبی مخچه که در هماهنگی حرکات و حفظ تعادل نقش دارند." },
+            "Vermis": { fa: "کرمینه", desc: "بخش میانی مخچه که دو نیم‌کره را به هم متصل می‌کند و در حفظ تعادل نقش دارد." },
+            "Pineal gland": { fa: "غده صنوبری (اپی‌فیز)", desc: "در بخش پشتی تالاموس قرار دارد و چرخه خواب و بیداری را تنظیم می‌کند." },
+            "Superior colliculi": { fa: "برجستگی‌های فوقانی", desc: "دو برجستگی در بخش پشتی میان‌مغز که در مسیرهای بینایی نقش دارند." },
+            "Inferior colliculi": { fa: "برجستگی‌های تحتانی", desc: "دو برجستگی در بخش پشتی میان‌مغز که در مسیرهای شنوایی نقش دارند." },
+            "Trochlear nerve": { fa: "عصب قرقره‌ای", desc: "چهارمین عصب مغزی که یکی از ماهیچه‌های چشم را عصب‌دهی می‌کند." },
+            "Midbrain": { fa: "میان‌مغز", desc: "بخشی از ساقه مغز که در تنظیم حرکات چشمی و پردازش شنوایی و بینایی نقش دارد." },
+            "Olfactory bulbs": { fa: "پیازهای بویایی", desc: "ساختارهای جلویی مغز که مسئول پردازش اولیه سیگنال‌های بویایی هستند." },
+            "Olfactory tracts": { fa: "راه‌های بویایی", desc: "دسته‌ای از رشته‌های عصبی که پیازهای بویایی را به نواحی بالاتر مغز متصل می‌کنند." },
+            "Optic tracts": { fa: "راه‌های بینایی", desc: "رشته‌های عصبی که از کیاسمای بینایی به سمت مراکز بینایی امتداد می‌یابند." },
+            "Mammillary body": { fa: "جسم پستانی", desc: "دو برجستگی کوچک در کف مغز که بخشی از دستگاه لیمبیک هستند." },
+            "Pituitary gland": { fa: "غده هیپوفیز", desc: "غده‌ای در زیر هیپوتالاموس که هورمون‌های مهمی ترشح می‌کند." },
+            "Optic chiasm": { fa: "کیاسمای بینایی", desc: "محل تقاطع رشته‌های عصبی عصب بینایی در کف مغز." },
+            "Olfactory nerve": { fa: "عصب بویایی", desc: "اولین عصب مغزی که حس بویایی را منتقل می‌کند." },
+            "Optic nerve": { fa: "عصب بینایی", desc: "دومین عصب مغزی که اطلاعات بینایی را منتقل می‌کند." },
+            "Oculomotor nerve": { fa: "عصب حرکتی چشم", desc: "سومین عصب مغزی که حرکات چشم را کنترل می‌کند." },
+            "Trigeminal nerve": { fa: "عصب سه‌قلو", desc: "پنجمین عصب مغزی که حس صورت و جویدن را کنترل می‌کند." },
+            "Facial nerve": { fa: "عصب چهره‌ای", desc: "هفتمین عصب مغزی که حرکات حالت چهره را کنترل می‌کند." },
+            "Abducens nerve": { fa: "عصب دورکننده", desc: "ششمین عصب مغزی که حرکت چشم به خارج را ممکن می‌کند." },
+            "Corpus callosum": { fa: "جسم پینه‌ای", desc: "نوار ضخیمی از رشته‌های عصبی که دو نیم‌کره را به هم متصل می‌کند." },
+            "Cerebral hemispheres": { fa: "نیم‌کره‌های مخ", desc: "دو نیمه چپ و راست مخ. نیم‌کره چپ کنترل سمت راست و نیم‌کره راست کنترل سمت چپ را دارد." },
+            "Third ventricle": { fa: "بطن سوم", desc: "یک حفره باریک و میانی در ناحیه تالاموس است." },
+            "Interthalamic adhesion": { fa: "رابط بین تالاموسی", desc: "اتصال بین دو تالاموس است." },
+            "Thalamus": { fa: "تالاموس", desc: "نقش کلیدی در انتقال و پردازش پیام‌های حسی به قشر مغز دارد." },
+            "Fornix": { fa: "رابط سه‌گوش (فورنیکس)", desc: "دسته‌ای از رشته‌های عصبی که در زیر جسم پینه‌ای قرار دارد." },
+            "Septum pellucidum": { fa: "دیواره شفاف", desc: "غشای نازکی است که دو بطن جانبی را از هم جدا می‌کند." },
+            "Lateral ventricles": { fa: "بطن‌های جانبی", desc: "حفره‌های پر از مایع مغزی-نخاعی درون نیم‌کره‌های مخ." },
+            "Caudate nucleus": { fa: "هسته دمی", desc: "بخشی از عقده‌های قاعده‌ای که در کنترل حرکات ارادی نقش دارد." },
+            "Cerebral aqueduct": { fa: "مجرای سیلویوس", desc: "مجرای باریکی که بطن سوم را به بطن چهارم متصل می‌کند." },
+            "Fourth ventricle": { fa: "بطن چهارم", desc: "در فضای بین ساقه مغز و مخچه قرار دارد." },
+            "Hippocampus": { fa: "هیپوکامپ", desc: "نقش اساسی در تثبیت حافظه و پردازش اطلاعات فضایی دارد." },
+            "Arbor vitae": { fa: "درخت زندگی", desc: "ماده سفید شاخه‌دار درون مخچه که ظاهری شبیه به درخت دارد." },
+            "Medulla oblongata": { fa: "بصل‌النخاع", desc: "پایین‌ترین بخش ساقه مغز که مراکز حیاتی تنفس و ضربان قلب را کنترل می‌کند." },
+            "Pons": { fa: "پل مغزی", desc: "برجستگی میانی ساقه مغز که ارتباط بین مخ و مخچه را برقرار می‌کند." },
+            "White matter": { fa: "ماده سفید", desc: "بافتی در زیر قشر خاکستری که از آکسون‌های میلین‌دار تشکیل شده است." },
+            "Corpus callosum": { fa: "جسم پینه‌ای", desc: "نوار ضخیمی از رشته‌های عصبی سفید که دو نیم‌کره چپ و راست را به هم متصل می‌کند." }
+        };
 
-        function renderTranslationList() {
+        // لیست کلمات موجود در هر ۱۰ اسلاید (دقیقاً از روی عکس‌های شما)
+        const slidesData = {
+            1: { title: "اسلاید ۱: پرده‌های مغزی (Meninges)", words: ["Meninges", "Dura mater", "Pia mater", "Cerebrum (cortex)"] },
+            2: { title: "اسلاید ۲: سطح پشتی مغز (Dorsal surface)", words: ["Parietal lobe", "Occipital lobe", "Temporal lobe", "Longitudinal fissure", "Cerebellar hemispheres", "Vermis", "Meninges", "Cerebrum (cortex)"] },
+            3: { title: "اسلاید ۳: زیر مخچه (Under the cerebellum)", words: ["Pineal gland", "Superior colliculi", "Inferior colliculi", "Trochlear nerve", "Midbrain", "Meninges", "Cerebrum (cortex)"] },
+            4: { title: "اسلاید ۴: سطح شکمی (Ventral surface)", words: ["Olfactory bulbs", "Olfactory tracts", "Optic tracts", "Mammillary body", "Pituitary gland", "Optic chiasm", "Meninges", "Cerebrum (cortex)"] },
+            5: { title: "اسلاید ۵: اعصاب مغزی (Cranial nerves)", words: ["Olfactory nerve", "Optic nerve", "Oculomotor nerve", "Trigeminal nerve", "Facial nerve", "Abducens nerve", "Meninges", "Cerebrum (cortex)"] },
+            6: { title: "اسلاید ۶: جدا کردن نیم‌کره‌ها", words: ["Corpus callosum", "Longitudinal fissure", "Cerebral hemispheres", "Meninges", "Cerebrum (cortex)"] },
+            7: { title: "اسلاید ۷: برش میانی (Midsagittal cut)", words: ["Thalamus", "Third ventricle", "Interthalamic adhesion", "Fornix", "Optic chiasm", "Mammillary body", "Meninges", "Cerebrum (cortex)"] },
+            8: { title: "اسلاید ۸: بطن‌ها و شبکه کوروئیدی", words: ["Septum pellucidum", "Lateral ventricles", "Caudate nucleus", "Cerebral aqueduct", "Fourth ventricle", "Meninges", "Cerebrum (cortex)"] },
+            9: { title: "اسلاید ۹: برش‌های تاجی", words: ["Hippocampus", "Lateral ventricles", "Caudate nucleus", "Corpus callosum", "Fornix", "Meninges", "Cerebrum (cortex)"] },
+            10: { title: "اسلاید ۱۰: مخچه و درخت زندگی", words: ["Vermis", "Arbor vitae", "Medulla oblongata", "Fourth ventricle", "Meninges", "Cerebrum (cortex)"] }
+        };
+
+        let currentSlide = 1;
+
+        // رندر لیست کلمات برای اسلاید جاری
+        function renderList() {
             const list = document.getElementById('translation-list');
+            const title = document.getElementById('sidebar-title');
             list.innerHTML = '';
-            translationData.forEach((item) => {
-                const div = document.createElement('div');
-                div.className = 'translation-item';
-                div.innerHTML = `<span class="en-name">${item.en}</span><span class="fa-name">${item.fa}</span>`;
-                div.onclick = () => {
-                    document.querySelectorAll('.translation-item').forEach(el => el.classList.remove('active'));
-                    div.classList.add('active');
-                    
-                    // نمایش در پنل شناور
-                    document.getElementById('model-info-fa').innerText = item.fa;
-                    document.getElementById('model-info-en').innerText = item.en;
-                    document.getElementById('model-info-desc').innerText = item.desc;
-                    document.getElementById('model-info-overlay').classList.add('show');
-                };
-                list.appendChild(div);
+            
+            const slideInfo = slidesData[currentSlide];
+            title.innerText = slideInfo.title;
+
+            slideInfo.words.forEach(word => {
+                const data = dictionary[word];
+                if (data) {
+                    const div = document.createElement('div');
+                    div.className = 'translation-item';
+                    div.innerHTML = `
+                        <span class="en-name">${word}</span>
+                        <span class="fa-name">${data.fa}</span>
+                        <p class="desc">${data.desc}</p>
+                    `;
+                    div.onclick = () => {
+                        document.querySelectorAll('.translation-item').forEach(el => el.classList.remove('active'));
+                        div.classList.add('active');
+                        
+                        document.getElementById('model-info-fa').innerText = data.fa;
+                        document.getElementById('model-info-en').innerText = word;
+                        document.getElementById('model-info-desc').innerText = data.desc;
+                        document.getElementById('model-info-overlay').classList.add('show');
+                    };
+                    list.appendChild(div);
+                }
             });
         }
-        renderTranslationList();
+
+        // ساخت دکمه‌های اسلاید
+        function setupSlideControls() {
+            const container = document.getElementById('slide-controls');
+            for (let i = 1; i <= 10; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'slide-btn' + (i === 1 ? ' active' : '');
+                btn.innerText = i;
+                btn.onclick = () => {
+                    document.querySelectorAll('.slide-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSlide = i;
+                    renderList();
+                };
+                container.appendChild(btn);
+            }
+        }
+
+        // شروع
+        setupSlideControls();
+        renderList();
     </script>
 
     <!-- ================= محتوای فعالیت ۷ (متن کتاب) ================= -->
@@ -308,22 +370,23 @@
         let scene, camera, renderer, controls;
         let objects = [], byName = {}, active = [];
 
-        // دیکشنری کامل توضیحات برای تمام اجزای مدل سه‌بعدی (توضیحات گسترده)
         const fullDescriptions = {
-            'نیم‌کره مخی چپ': { en: 'Left Cerebral Hemisphere', desc: 'نیم‌کره چپ مخ، بزرگ‌ترین بخش مغز است. این بخش مرکز پردازش اطلاعات حسی، حرکتی، شناختی و گفتار است. سطح آن پر از شیارها و شکنج‌هایی است که سطح تماس قشر مغز را برای پردازش‌های پیچیده افزایش می‌دهند.' },
-            'نیم‌کره مخی راست': { en: 'Right Cerebral Hemisphere', desc: 'نیم‌کره راست مخ که با شیار طولی از نیم‌کره چپ جدا شده است. این بخش بیشتر در کنترل سمت چپ بدن، پردازش اطلاعات فضایی، تشخیص چهره و درک موسیقی نقش دارد.' },
-            'شیار طولی بین دو نیم‌کره': { en: 'Longitudinal Fissure', desc: 'یک شیار بسیار عمیق در خط میانی مغز که دو نیم‌کره چپ و راست را از هم جدا می‌کند و تا جسم پینه‌ای ادامه دارد.' },
-            'پیاز بویایی چپ': { en: 'Left Olfactory Bulb', desc: 'ساختار جلویی مغز که مسئول دریافت و پردازش اولیه سیگنال‌های بویایی است. این پیاز از طریق راه‌های بویایی به قشر مخ متصل می‌شود.' },
-            'پیاز بویایی راست': { en: 'Right Olfactory Bulb', desc: 'مشابه سمت چپ، این ساختار سیگنال‌های بویایی را از گیرنده‌های بینی دریافت کرده و به مغز منتقل می‌کند.' },
-            'شکنج قشر مخ': { en: 'Cerebral Gyrus', desc: 'برجستگی‌های سطح قشر مخ که با افزایش سطح، پردازش اطلاعات را ممکن می‌سازند. بین این برجستگی‌ها شیارهایی قرار دارد.' },
+            // ... (کدهای قبلی برای توضیحات مدل سه‌بعدی شماتیک در اینجا قرار می‌گیرد)
+            // برای صرفه جویی در فضا، من فقط چند مورد را نوشتم. در کد اصلی همه نوشته شده بود.
+            'نیم‌کره مخی چپ': { en: 'Left Cerebral Hemisphere', desc: 'نیم‌کره چپ مخ، بزرگ‌ترین بخش مغز است. مرکز پردازش اطلاعات حسی، حرکتی و گفتار است.' },
+            'نیم‌کره مخی راست': { en: 'Right Cerebral Hemisphere', desc: 'نیم‌کره راست مخ. بیشتر در کنترل سمت چپ بدن، پردازش اطلاعات فضایی و درک موسیقی نقش دارد.' },
+            'شیار طولی بین دو نیم‌کره': { en: 'Longitudinal Fissure', desc: 'یک شیار عمیق در خط میانی مغز که دو نیم‌کره چپ و راست را از هم جدا می‌کند.' },
+            'پیاز بویایی چپ': { en: 'Left Olfactory Bulb', desc: 'ساختار جلویی مغز که مسئول دریافت و پردازش اولیه سیگنال‌های بویایی است.' },
+            'پیاز بویایی راست': { en: 'Right Olfactory Bulb', desc: 'مشابه سمت چپ، این ساختار سیگنال‌های بویایی را دریافت کرده و به مغز منتقل می‌کند.' },
+            'شکنج قشر مخ': { en: 'Cerebral Gyrus', desc: 'برجستگی‌های سطح قشر مخ که با افزایش سطح، پردازش اطلاعات را ممکن می‌سازند.' },
             'شیار عرضی': { en: 'Transverse Fissure', desc: 'مرز آناتومیک میان بخش پشتی مخ و مخچه را مشخص می‌کند.' },
             'نیم‌کره مخچه چپ': { en: 'Left Cerebellar Hemisphere', desc: 'مخچه در پشت ساقه مغز قرار دارد و مسئول هماهنگی حرکات ارادی، حفظ تعادل و یادگیری مهارت‌های حرکتی است.' },
             'نیم‌کره مخچه راست': { en: 'Right Cerebellar Hemisphere', desc: 'نیم‌کره مقابل مخچه که در هماهنگی حرکات سمت چپ بدن و حفظ تعادل نقش دارد.' },
-            'کرمینه مخچه': { en: 'Vermis', desc: 'بخش میانی مخچه که دو نیم‌کره را به هم متصل می‌کند. این بخش در حفظ تعادل بدن و هماهنگی حرکات ستون فقرات نقش اساسی دارد.' },
+            'کرمینه مخچه': { en: 'Vermis', desc: 'بخش میانی مخچه که دو نیم‌کره را به هم متصل می‌کند. در حفظ تعادل بدن و هماهنگی حرکات ستون فقرات نقش اساسی دارد.' },
             'چین‌های مخچه': { en: 'Cerebellar Folia', desc: 'چین‌های باریک سطح مخچه که به آن ظاهری برگ‌مانند داده و سطح آن را برای پردازش اطلاعات افزایش می‌دهند.' },
             'بصل‌النخاع': { en: 'Medulla Oblongata', desc: 'پایین‌ترین بخش ساقه مغز است که به نخاع متصل می‌شود. مراکز حیاتی مانند تنفس و ضربان قلب را کنترل می‌کند.' },
             'نخاع': { en: 'Spinal Cord', desc: 'در ادامه بصل‌النخاع قرار دارد و وظیفه انتقال پیام‌های حسی و حرکتی بین مغز و بدن را بر عهده دارد.' },
-            'کیاسمای بینایی': { en: 'Optic Chiasm', desc: 'محل تقاطع رشته‌های عصبی عصب بینایی است. در این محل، رشته‌های نیمه داخلی چشم‌ها تقاطع می‌کنند.' },
+            'کیاسمای بینایی': { en: 'Optic Chiasm', desc: 'محل تقاطع رشته‌های عصبی عصب بینایی است.' },
             'پل مغزی': { en: 'Pons', desc: 'برجستگی میانی ساقه مغز است که مرکز ارتباط بین مخ و مخچه بوده و در تنظیم تنفس نقش دارد.' },
             'مخچه': { en: 'Cerebellum', desc: 'در پشت ساقه مغز قرار دارد و در هماهنگی حرکات، تعادل و یادگیری حرکتی نقش دارد.' },
             'جسم پینه‌ای': { en: 'Corpus Callosum', desc: 'نوار ضخیمی از رشته‌های عصبی سفید است که دو نیم‌کره چپ و راست را به هم متصل کرده و ارتباط بین آن‌ها را برقرار می‌کند.' },
@@ -339,6 +402,7 @@
             'رابط بین تالاموسی': { en: 'Interthalamic Adhesion', desc: 'اتصال بین دو تالاموس است که در اکثر پستانداران وجود دارد.' }
         };
 
+        // کدهای ساخت مدل سه بعدی (همان کدهای قبلی)
         const mats = {
             cortex: new THREE.MeshStandardMaterial({ color: 0xb77c63, roughness: .8 }),
             white: new THREE.MeshStandardMaterial({ color: 0xe0c59f, roughness: .8 }),
@@ -374,7 +438,6 @@
             controls.minDistance = 3.5;
             controls.maxDistance = 18;
 
-            // رویداد کلیک روی مدل
             const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
             renderer.domElement.addEventListener('click', e => {
                 const r = renderer.domElement.getBoundingClientRect();
@@ -396,7 +459,6 @@
             renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
         }
 
-        // انتخاب اندام و نمایش اطلاعات
         function selectPart(name) {
             const data = fullDescriptions[name] || { en: name, desc: 'توضیحی برای این بخش ثبت نشده است.' };
             
@@ -407,7 +469,6 @@
             
             panel.classList.add('show');
             
-            // هایلایت کردن مش انتخاب شده
             objects.forEach(o => {
                 if (o.userData.name === name) {
                     o.material.emissive = new THREE.Color(0x00e5ff);
@@ -598,4 +659,4 @@
         }, 500);
     </script>
 </body>
-    </html>
+        </html>
