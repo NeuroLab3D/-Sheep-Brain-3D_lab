@@ -112,6 +112,22 @@
             .activity-model-side { width: 100%; height: 50%; border-left: none; border-bottom: 1px solid #29496d; }
             .activity-guide-side { width: 100%; height: 50%; }
         }
+
+        /* ================= استایل چت‌بات ================= */
+        #chat-button { position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #00e5ff 0%, #007bb5 100%); color: #000; border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 28px; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4); z-index: 99999; transition: transform 0.2s; }
+        #chat-button:active { transform: scale(0.9); }
+        #chat-window { display: none; position: fixed; bottom: 90px; left: 20px; width: 350px; height: 500px; max-height: 80vh; background: #0a192b; border: 1px solid #29496d; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 99999; flex-direction: column; font-family: 'Vazirmatn', Tahoma, sans-serif; direction: rtl; overflow: hidden; }
+        #chat-header { background: #102b49; color: #00e5ff; padding: 15px; border-bottom: 1px solid #29496d; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        #chat-header .close-chat { cursor: pointer; color: #ff5252; font-size: 18px; }
+        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #07111f; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 12px; max-width: 85%; font-size: 14px; line-height: 1.6; word-wrap: break-word; }
+        .msg.user { background: #00e5ff; color: #000; align-self: flex-end; border-bottom-left-radius: 2px; }
+        .msg.ai { background: #15385d; color: #edf5ff; border: 1px solid #29496d; align-self: flex-start; border-bottom-right-radius: 2px; }
+        #chat-input-area { padding: 10px; background: #0a192b; border-top: 1px solid #29496d; display: flex; gap: 8px; }
+        #chat-input { flex: 1; padding: 10px; background: #07111f; border: 1px solid #29496d; border-radius: 8px; color: #fff; font-family: inherit; outline: none; font-size: 14px; }
+        #chat-input:focus { border-color: #00e5ff; }
+        #chat-send-btn { background: #00e5ff; color: #000; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.2s; }
+        #chat-send-btn:hover { background: #007bb5; color: #fff; }
     </style>
 </head>
 <body>
@@ -140,12 +156,8 @@
                 <div id="threejs-iframe-container">
                     <iframe src="https://easyanatomylab.com/embed/sheep-brain-dissection" title="مدل سه‌بعدی" allow="fullscreen" allowfullscreen loading="lazy"></iframe>
                     
-                    <!-- دکمه‌های کنترل اسلاید -->
-                    <div class="slide-controls" id="slide-controls">
-                        <!-- با جاوااسکریپت پر میشه -->
-                    </div>
+                    <div class="slide-controls" id="slide-controls"></div>
 
-                    <!-- پنل اطلاعات شناور -->
                     <div class="info-overlay" id="model-info-overlay">
                         <button class="close-info" onclick="document.getElementById('model-info-overlay').classList.remove('show')">✕</button>
                         <h3 id="model-info-fa">نام</h3>
@@ -198,6 +210,22 @@
         </div>
     </div>
 
+    <!-- ================= دکمه و پنجره چت‌بات ================= -->
+    <div id="chat-button">💬</div>
+    <div id="chat-window">
+        <div id="chat-header">
+            <span>🤖 پشتیبانی هوشمند آزمایشگاه</span>
+            <span class="close-chat" onclick="document.getElementById('chat-window').style.display='none'">✕</span>
+        </div>
+        <div id="chat-messages">
+            <div class="msg ai">سلام! من دستیار هوشمند این آزمایشگاه هستم. هر سوالی درباره مغز گوسفند یا بخش‌های سایت دارید، بپرسید.</div>
+        </div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="سوال خود را بنویسید..." autocomplete="off">
+            <button id="chat-send-btn">ارسال</button>
+        </div>
+    </div>
+
     <script>
         function enterApp() {
             document.getElementById('splash-screen').style.opacity = '0';
@@ -218,7 +246,6 @@
 
     <!-- ================= دیکشنری و اسلایدها ================= -->
     <script>
-        // دیکشنری جامع (همه کلماتی که در 10 اسلاید وجود دارد)
         const dictionary = {
             "Meninges": { fa: "پرده‌های مغزی (مننژ)", desc: "سه لایه غشایی (سخت‌شامه، عنکبوتیه و نرم‌شامه) که مغز و نخاع را کاملاً در بر می‌گیرند. این پرده‌ها نقش حیاتی در محافظت فیزیکی از بافت عصبی، حمایت از رگ‌های خونی و تولید مایع مغزی-نخاعی دارند." },
             "Dura mater": { fa: "سخت‌شامه", desc: "لایه بیرونی و ضخیم پرده‌های مغزی که از بافت فیبری محکم ساخته شده و مغز را در برابر ضربات شدید محافظت می‌کند." },
@@ -266,7 +293,6 @@
             "Corpus callosum": { fa: "جسم پینه‌ای", desc: "نوار ضخیمی از رشته‌های عصبی سفید که دو نیم‌کره چپ و راست را به هم متصل می‌کند." }
         };
 
-        // لیست کلمات موجود در هر ۱۰ اسلاید (دقیقاً از روی عکس‌های شما)
         const slidesData = {
             1: { title: "اسلاید ۱: پرده‌های مغزی (Meninges)", words: ["Meninges", "Dura mater", "Pia mater", "Cerebrum (cortex)"] },
             2: { title: "اسلاید ۲: سطح پشتی مغز (Dorsal surface)", words: ["Parietal lobe", "Occipital lobe", "Temporal lobe", "Longitudinal fissure", "Cerebellar hemispheres", "Vermis", "Meninges", "Cerebrum (cortex)"] },
@@ -282,7 +308,6 @@
 
         let currentSlide = 1;
 
-        // رندر لیست کلمات برای اسلاید جاری
         function renderList() {
             const list = document.getElementById('translation-list');
             const title = document.getElementById('sidebar-title');
@@ -315,7 +340,6 @@
             });
         }
 
-        // ساخت دکمه‌های اسلاید
         function setupSlideControls() {
             const container = document.getElementById('slide-controls');
             for (let i = 1; i <= 10; i++) {
@@ -332,12 +356,11 @@
             }
         }
 
-        // شروع
         setupSlideControls();
         renderList();
     </script>
 
-    <!-- ================= محتوای فعالیت ۷ (متن کتاب) ================= -->
+    <!-- ================= محتوای فعالیت ۷ ================= -->
     <script>
         const activitySteps = [
             { title: "آماده‌سازی و وسایل", body: "<p>وسایل لازم: <b>مغز سالم گوسفند (یا گوساله)، ابزار تشریح (چاقوی جراحی، پنس، قیچی) و دستکش</b>. مغز را روی ظرف تشریح قرار دهید و با راهنمایی معلم آماده شوید. دقت کنید که تمام ابزارها استریل و تمیز باشند.</p>" },
@@ -361,7 +384,7 @@
         renderGuideSteps();
     </script>
 
-    <!-- ================= مدل سه‌بعدی شماتیک (فعالیت ۷) ================= -->
+    <!-- ================= مدل سه‌بعدی ================= -->
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -371,8 +394,6 @@
         let objects = [], byName = {}, active = [];
 
         const fullDescriptions = {
-            // ... (کدهای قبلی برای توضیحات مدل سه‌بعدی شماتیک در اینجا قرار می‌گیرد)
-            // برای صرفه جویی در فضا، من فقط چند مورد را نوشتم. در کد اصلی همه نوشته شده بود.
             'نیم‌کره مخی چپ': { en: 'Left Cerebral Hemisphere', desc: 'نیم‌کره چپ مخ، بزرگ‌ترین بخش مغز است. مرکز پردازش اطلاعات حسی، حرکتی و گفتار است.' },
             'نیم‌کره مخی راست': { en: 'Right Cerebral Hemisphere', desc: 'نیم‌کره راست مخ. بیشتر در کنترل سمت چپ بدن، پردازش اطلاعات فضایی و درک موسیقی نقش دارد.' },
             'شیار طولی بین دو نیم‌کره': { en: 'Longitudinal Fissure', desc: 'یک شیار عمیق در خط میانی مغز که دو نیم‌کره چپ و راست را از هم جدا می‌کند.' },
@@ -402,7 +423,6 @@
             'رابط بین تالاموسی': { en: 'Interthalamic Adhesion', desc: 'اتصال بین دو تالاموس است که در اکثر پستانداران وجود دارد.' }
         };
 
-        // کدهای ساخت مدل سه بعدی (همان کدهای قبلی)
         const mats = {
             cortex: new THREE.MeshStandardMaterial({ color: 0xb77c63, roughness: .8 }),
             white: new THREE.MeshStandardMaterial({ color: 0xe0c59f, roughness: .8 }),
@@ -499,7 +519,6 @@
             const m = new THREE.Mesh(g, mat); m.position.z = z - depth / 2; return add(m, name, desc, mat);
         }
 
-        // --- توابع ساخت مدل ---
         function buildExternal() {
             ball('نیم‌کره مخی چپ','',[-.78,.42,0],[.79,1.48,.48],mats.cortex);
             ball('نیم‌کره مخی راست','',[.78,.42,0],[.79,1.48,.48],mats.cortex);
@@ -658,24 +677,65 @@
             new ResizeObserver(resize).observe(host);
         }, 500);
     </script>
-   <!DOCTYPE html>
-<html lang="fa">
-<head>
-    <title>سایت من</title>
-    <!-- کدهای CSS و هدر شما -->
-</head>
-<body>
-    <!-- محتوای سایت شما (منو، عکس‌ها، متن‌ها و...) -->
-    <h1>به سایت من خوش آمدید</h1>
-    ...
-    
-    <!-- 👇 کد چت‌بات را دقیقاً اینجا، قبل از تگ بسته شدن body قرار دهید 👇 -->
-    <div id="chat-button">...</div>
-    <div id="chat-window">...</div>
-    <script>...</script>
-    <!-- 👆 پایان کد چت‌بات 👆 -->
+
+    <!-- ================= اسکریپت چت‌بات ================= -->
+    <script>
+        const chatBtn = document.getElementById('chat-button');
+        const chatWin = document.getElementById('chat-window');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('chat-send-btn');
+        const chatMessages = document.getElementById('chat-messages');
+
+        chatBtn.addEventListener('click', () => {
+            chatWin.style.display = chatWin.style.display === 'none' ? 'flex' : 'none';
+        });
+
+        function addMsg(text, type) {
+            const div = document.createElement('div');
+            div.className = 'msg ' + type;
+            div.innerText = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            addMsg(text, 'user');
+            chatInput.value = '';
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'msg ai';
+            loadingMsg.innerText = 'در حال تایپ...';
+            chatMessages.appendChild(loadingMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                
+                chatMessages.removeChild(loadingMsg);
+
+                if (data.reply) {
+                    addMsg(data.reply, 'ai');
+                } else {
+                    addMsg(data.error || 'خطایی رخ داد.', 'ai');
+                }
+            } catch (error) {
+                chatMessages.removeChild(loadingMsg);
+                addMsg('ارتباط با سرور برقرار نشد. (فایل api.php را بررسی کنید)', 'ai');
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
 
 </body>
-</html> 
-</body>
-        </html>
+    </html>
