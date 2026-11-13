@@ -85,28 +85,23 @@
         .guide-card p { font-size: 14.5px; line-height: 2.1; color: #d6e4f4; margin: 0 0 10px; text-align: justify;}
         .guide-card .pill { display: inline-block; background: #17466d; border-radius: 20px; padding: 6px 12px; font-size: 12px; margin: 4px; color: #fff; }
 
+        /* --- نوار جستجو --- */
+        .search-bar-container { padding: 10px 15px; background: #0a192b; border-bottom: 1px solid #29496d; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        #search-input { flex: 1; padding: 10px 15px; border-radius: 8px; border: 1px solid #29496d; background: #07111f; color: #fff; font-family: inherit; outline: none; font-size: 14px; transition: 0.3s; }
+        #search-input:focus { border-color: #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+        #search-results { position: absolute; top: 60px; left: 15px; right: 15px; background: #0c1d32; border: 1px solid #00e5ff; border-radius: 10px; max-height: 300px; overflow-y: auto; z-index: 999; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .search-result-item { padding: 12px 15px; border-bottom: 1px solid #29496d; cursor: pointer; transition: 0.2s; }
+        .search-result-item:hover { background: #15385d; }
+        .search-result-item .res-en { font-size: 14px; color: #00e5ff; font-family: monospace; display: block; direction: ltr; text-align: left; }
+        .search-result-item .res-fa { font-size: 15px; font-weight: bold; color: #fff; display: block; margin-top: 4px; }
+        .search-result-item .res-desc { font-size: 12px; color: #a4b8d0; margin-top: 5px; display: none; }
+
         @media(max-width: 900px) {
             #model-container { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
             #activity-container { flex-direction: column; }
             .activity-model-side { width: 100%; height: 50%; border-left: none; border-bottom: 1px solid #29496d; }
             .activity-guide-side { width: 100%; height: 50%; }
         }
-
-        /* ================= استایل چت‌بات ================= */
-        #chat-button { position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #00e5ff 0%, #007bb5 100%); color: #000; border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 28px; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4); z-index: 99999; transition: transform 0.2s; }
-        #chat-button:active { transform: scale(0.9); }
-        #chat-window { display: none; position: fixed; bottom: 90px; left: 20px; width: 350px; height: 500px; max-height: 80vh; background: #0a192b; border: 1px solid #29496d; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 99999; flex-direction: column; font-family: 'Vazirmatn', Tahoma, sans-serif; direction: rtl; overflow: hidden; }
-        #chat-header { background: #102b49; color: #00e5ff; padding: 15px; border-bottom: 1px solid #29496d; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        #chat-header .close-chat { cursor: pointer; color: #ff5252; font-size: 18px; }
-        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; background: #07111f; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 14px; border-radius: 12px; max-width: 85%; font-size: 14px; line-height: 1.6; word-wrap: break-word; }
-        .msg.user { background: #00e5ff; color: #000; align-self: flex-end; border-bottom-left-radius: 2px; }
-        .msg.ai { background: #15385d; color: #edf5ff; border: 1px solid #29496d; align-self: flex-start; border-bottom-right-radius: 2px; }
-        #chat-input-area { padding: 10px; background: #0a192b; border-top: 1px solid #29496d; display: flex; gap: 8px; }
-        #chat-input { flex: 1; padding: 10px; background: #07111f; border: 1px solid #29496d; border-radius: 8px; color: #fff; font-family: inherit; outline: none; font-size: 14px; }
-        #chat-input:focus { border-color: #00e5ff; }
-        #chat-send-btn { background: #00e5ff; color: #000; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; transition: 0.2s; }
-        #chat-send-btn:hover { background: #007bb5; color: #fff; }
     </style>
 </head>
 <body>
@@ -129,18 +124,20 @@
             <button class="tab-btn" onclick="switchTab('activity', this)">📖 تشریح گام‌به‌گام (فعالیت ۷)</button>
         </div>
 
+        <!-- نوار جستجو -->
+        <div class="search-bar-container">
+            <input type="text" id="search-input" placeholder="جستجوی نام انگلیسی یا فارسی اجزای مغز (مثلاً Thalamus یا تالاموس)...">
+        </div>
+        <div id="search-results"></div>
+
         <!-- تب ۱: مدل آنلاین -->
         <div id="tab-model3d" class="tab-content active">
             <div id="model-container">
                 <div id="threejs-iframe-container">
                     <iframe src="https://easyanatomylab.com/embed/sheep-brain-dissection" title="مدل سه‌بعدی" allow="fullscreen" allowfullscreen loading="lazy"></iframe>
                     
-                    <!-- دکمه‌های کنترل اسلاید -->
-                    <div class="slide-controls" id="slide-controls">
-                        <!-- با جاوااسکریپت پر میشه -->
-                    </div>
+                    <div class="slide-controls" id="slide-controls"></div>
 
-                    <!-- پنل اطلاعات شناور -->
                     <div class="info-overlay" id="model-info-overlay">
                         <button class="close-info" onclick="document.getElementById('model-info-overlay').classList.remove('show')">✕</button>
                         <h3 id="model-info-fa">نام</h3>
@@ -190,22 +187,6 @@
                     <div class="guide-list" id="guide-list"></div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- ================= دکمه و پنجره چت‌بات ================= -->
-    <div id="chat-button">💬</div>
-    <div id="chat-window">
-        <div id="chat-header">
-            <span>🤖 پشتیبانی هوشمند آزمایشگاه</span>
-            <span class="close-chat" onclick="document.getElementById('chat-window').style.display='none'">✕</span>
-        </div>
-        <div id="chat-messages">
-            <div class="msg ai">سلام! من دستیار هوشمند این آزمایشگاه هستم. هر سوالی درباره مغز گوسفند یا بخش‌های سایت دارید، بپرسید.</div>
-        </div>
-        <div id="chat-input-area">
-            <input type="text" id="chat-input" placeholder="سوال خود را بنویسید..." autocomplete="off">
-            <button id="chat-send-btn">ارسال</button>
         </div>
     </div>
 
@@ -660,64 +641,112 @@
         }, 500);
     </script>
 
-    <!-- ================= اسکریپت چت‌بات ================= -->
+    <!-- ================= اسکریپت جستجو ================= -->
     <script>
-        const chatBtn = document.getElementById('chat-button');
-        const chatWin = document.getElementById('chat-window');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('chat-send-btn');
-        const chatMessages = document.getElementById('chat-messages');
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
 
-        chatBtn.addEventListener('click', () => {
-            chatWin.style.display = chatWin.style.display === 'none' ? 'flex' : 'none';
-        });
-
-        function addMsg(text, type) {
-            const div = document.createElement('div');
-            div.className = 'msg ' + type;
-            div.innerText = text;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+        // ترکیب دیکشنری و توضیحات مدل سه‌بعدی برای جستجو
+        const allTerms = [];
+        
+        // اضافه کردن کلمات دیکشنری
+        for (const [en, data] of Object.entries(dictionary)) {
+            allTerms.push({ en: en, fa: data.fa, desc: data.desc });
         }
 
-        async function sendMessage() {
-            const text = chatInput.value.trim();
-            if (!text) return;
+        // اضافه کردن کلمات مدل سه‌بعدی (اگر در دیکشنری نبودند)
+        const fullDescriptions = {
+            'نیم‌کره مخی چپ': { en: 'Left Cerebral Hemisphere', desc: 'نیم‌کره چپ مخ، بزرگ‌ترین بخش مغز است. مرکز پردازش اطلاعات حسی، حرکتی و گفتار است.' },
+            'نیم‌کره مخی راست': { en: 'Right Cerebral Hemisphere', desc: 'نیم‌کره راست مخ. بیشتر در کنترل سمت چپ بدن، پردازش اطلاعات فضایی و درک موسیقی نقش دارد.' },
+            'شیار طولی بین دو نیم‌کره': { en: 'Longitudinal Fissure', desc: 'یک شیار عمیق در خط میانی مغز که دو نیم‌کره چپ و راست را از هم جدا می‌کند.' },
+            'پیاز بویایی چپ': { en: 'Left Olfactory Bulb', desc: 'ساختار جلویی مغز که مسئول دریافت و پردازش اولیه سیگنال‌های بویایی است.' },
+            'پیاز بویایی راست': { en: 'Right Olfactory Bulb', desc: 'مشابه سمت چپ، این ساختار سیگنال‌های بویایی را دریافت کرده و به مغز منتقل می‌کند.' },
+            'شکنج قشر مخ': { en: 'Cerebral Gyrus', desc: 'برجستگی‌های سطح قشر مخ که با افزایش سطح، پردازش اطلاعات را ممکن می‌سازند.' },
+            'شیار عرضی': { en: 'Transverse Fissure', desc: 'مرز آناتومیک میان بخش پشتی مخ و مخچه را مشخص می‌کند.' },
+            'نیم‌کره مخچه چپ': { en: 'Left Cerebellar Hemisphere', desc: 'مخچه در پشت ساقه مغز قرار دارد و مسئول هماهنگی حرکات ارادی، حفظ تعادل و یادگیری مهارت‌های حرکتی است.' },
+            'نیم‌کره مخچه راست': { en: 'Right Cerebellar Hemisphere', desc: 'نیم‌کره مقابل مخچه که در هماهنگی حرکات سمت چپ بدن و حفظ تعادل نقش دارد.' },
+            'کرمینه مخچه': { en: 'Vermis', desc: 'بخش میانی مخچه که دو نیم‌کره را به هم متصل می‌کند. در حفظ تعادل بدن و هماهنگی حرکات ستون فقرات نقش اساسی دارد.' },
+            'چین‌های مخچه': { en: 'Cerebellar Folia', desc: 'چین‌های باریک سطح مخچه که به آن ظاهری برگ‌مانند داده و سطح آن را برای پردازش اطلاعات افزایش می‌دهند.' },
+            'بصل‌النخاع': { en: 'Medulla Oblongata', desc: 'پایین‌ترین بخش ساقه مغز است که به نخاع متصل می‌شود. مراکز حیاتی مانند تنفس و ضربان قلب را کنترل می‌کند.' },
+            'نخاع': { en: 'Spinal Cord', desc: 'در ادامه بصل‌النخاع قرار دارد و وظیفه انتقال پیام‌های حسی و حرکتی بین مغز و بدن را بر عهده دارد.' },
+            'کیاسمای بینایی': { en: 'Optic Chiasm', desc: 'محل تقاطع رشته‌های عصبی عصب بینایی است.' },
+            'پل مغزی': { en: 'Pons', desc: 'برجستگی میانی ساقه مغز است که مرکز ارتباط بین مخ و مخچه بوده و در تنظیم تنفس نقش دارد.' },
+            'مخچه': { en: 'Cerebellum', desc: 'در پشت ساقه مغز قرار دارد و در هماهنگی حرکات، تعادل و یادگیری حرکتی نقش دارد.' },
+            'جسم پینه‌ای': { en: 'Corpus Callosum', desc: 'نوار ضخیمی از رشته‌های عصبی سفید است که دو نیم‌کره چپ و راست را به هم متصل کرده و ارتباط بین آن‌ها را برقرار می‌کند.' },
+            'تالاموس': { en: 'Thalamus', desc: 'در اطراف بطن سوم قرار دارد و نقش کلیدی در انتقال و پردازش پیام‌های حسی (به جز بویایی) به قشر مغز دارد.' },
+            'بطن جانبی': { en: 'Lateral Ventricle', desc: 'حفره‌های پر از مایع مغزی-نخاعی (CSF) درون نیم‌کره‌های مخ هستند.' },
+            'بطن سوم': { en: 'Third Ventricle', desc: 'یک حفره باریک و میانی در ناحیه تالاموس است.' },
+            'بطن چهارم': { en: 'Fourth Ventricle', desc: 'در فضای بین ساقه مغز و مخچه قرار دارد و مایع مغزی-نخاعی در آن جریان دارد.' },
+            'غده صنوبری': { en: 'Pineal Gland', desc: 'در بخش پشتی تالاموس قرار دارد و در تنظیم چرخه خواب و بیداری با ترشح ملاتونین نقش دارد.' },
+            'اجسام چهارقلو': { en: 'Corpora Quadrigemina', desc: 'شامل چهار برجستگی هستند که در مسیرهای بینایی و شنوایی نقش دارند.' },
+            'درخت زندگی': { en: 'Arbor Vitae', desc: 'ماده سفید شاخه‌دار درون مخچه است که ظاهری شبیه به درخت دارد.' },
+            'جسم مخطط': { en: 'Corpus Striatum', desc: 'مجموعه‌ای از هسته‌های عمقی در نیم‌کره مخ است که در کنترل حرکات و تصمیم‌گیری نقش دارد.' },
+            'شبکه کوروئیدی': { en: 'Choroid Plexus', desc: 'شبکه‌ای از مویرگ‌ها در بطن‌های مغزی است که مسئول تولید مایع مغزی-نخاعی است.' },
+            'رابط بین تالاموسی': { en: 'Interthalamic Adhesion', desc: 'اتصال بین دو تالاموس است که در اکثر پستانداران وجود دارد.' }
+        };
 
-            addMsg(text, 'user');
-            chatInput.value = '';
-            const loadingMsg = document.createElement('div');
-            loadingMsg.className = 'msg ai';
-            loadingMsg.innerText = 'در حال تایپ...';
-            chatMessages.appendChild(loadingMsg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            try {
-                const response = await fetch('api.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-                const data = await response.json();
-                
-                chatMessages.removeChild(loadingMsg);
-
-                if (data.reply) {
-                    addMsg(data.reply, 'ai');
-                } else {
-                    addMsg(data.error || 'خطایی رخ داد.', 'ai');
-                }
-            } catch (error) {
-                chatMessages.removeChild(loadingMsg);
-                addMsg('ارتباط با سرور برقرار نشد. (فایل api.php را بررسی کنید)', 'ai');
+        for (const [fa, data] of Object.entries(fullDescriptions)) {
+            if (!allTerms.find(t => t.en === data.en)) {
+                allTerms.push({ en: data.en, fa: fa, desc: data.desc });
             }
         }
 
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            searchResults.innerHTML = '';
+            
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            const matches = allTerms.filter(term => 
+                term.en.toLowerCase().includes(query) || 
+                term.fa.toLowerCase().includes(query)
+            );
+
+            if (matches.length === 0) {
+                searchResults.style.display = 'block';
+                searchResults.innerHTML = '<div class="search-result-item"><span class="res-fa" style="color:#8b9bb4;">موردی یافت نشد.</span></div>';
+                return;
+            }
+
+            searchResults.style.display = 'block';
+            matches.forEach(term => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.innerHTML = `
+                    <span class="res-en">${term.en}</span>
+                    <span class="res-fa">${term.fa}</span>
+                    <p class="res-desc">${term.desc}</p>
+                `;
+                div.onclick = () => {
+                    searchResults.style.display = 'none';
+                    searchInput.value = '';
+                    
+                    // نمایش در پنل اطلاعات مدل سه‌بعدی یا پنل شناور
+                    document.getElementById('model-info-fa').innerText = term.fa;
+                    document.getElementById('model-info-en').innerText = term.en;
+                    document.getElementById('model-info-desc').innerText = term.desc;
+                    document.getElementById('model-info-overlay').classList.add('show');
+                    
+                    // اگر در تب فعالیت هستیم، در پنل فعالیت هم نمایش دهد
+                    document.getElementById('info-fa').innerText = term.fa;
+                    document.getElementById('info-en').innerText = term.en;
+                    document.getElementById('info-desc').innerText = term.desc;
+                    document.getElementById('info-panel').classList.add('show');
+                };
+                searchResults.appendChild(div);
+            });
+        });
+
+        // بستن نتایج با کلیک بیرون
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
         });
     </script>
 
 </body>
-    </html>
+                    </html>
