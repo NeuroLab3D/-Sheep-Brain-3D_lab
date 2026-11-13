@@ -33,26 +33,12 @@
         #threejs-iframe-container { border: 1px solid #29496d; border-radius: 14px; overflow: hidden; background: #07111f; position: relative;}
         #threejs-iframe-container iframe { width: 100%; height: 100%; border: none; }
 
-        /* دکمه‌های تغییر اسلاید (شبیه‌سازی) */
-        .slide-controls {
-            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 5px; z-index: 20; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 8px;
-        }
-        .slide-btn {
-            background: #15385d; border: 1px solid #4775a8; color: #fff; width: 30px; height: 30px;
-            border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;
-        }
+        .slide-controls { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 20; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 8px; }
+        .slide-btn { background: #15385d; border: 1px solid #4775a8; color: #fff; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .slide-btn:hover { background: #23639a; }
         .slide-btn.active { background: #00e5ff; color: #000; border-color: #00e5ff; }
 
-        /* پنل اطلاعات شناور */
-        .info-overlay {
-            position: absolute; bottom: 20px; left: 20px; right: 20px;
-            background: rgba(10, 25, 43, 0.98); border: 1px solid #00e5ff;
-            border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: none; z-index: 30; animation: slideUp 0.3s ease;
-            max-height: 50%; overflow-y: auto;
-        }
+        .info-overlay { position: absolute; bottom: 20px; left: 20px; right: 20px; background: rgba(10, 25, 43, 0.98); border: 1px solid #00e5ff; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; z-index: 30; animation: slideUp 0.3s ease; max-height: 50%; overflow-y: auto; }
         .info-overlay.show { display: block; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .info-overlay h3 { font-size: 18px; color: #00e5ff; margin: 0 0 5px; }
@@ -86,15 +72,8 @@
         #threejs-canvas-wrapper { flex: 1; position: relative; overflow: hidden; }
         #threejs-canvas-wrapper canvas { display: block; width: 100%; height: 100%; }
         
-        .info-panel-activity {
-            position: absolute; bottom: 15px; left: 15px; right: 15px;
-            background: rgba(16, 39, 67, 0.95); border: 1px solid #00e5ff;
-            border-radius: 12px; padding: 18px; color: #fff; backdrop-filter: blur(5px);
-            display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 10;
-            max-height: 50%; overflow-y: auto;
-        }
+        .info-panel-activity { position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(16, 39, 67, 0.95); border: 1px solid #00e5ff; border-radius: 12px; padding: 18px; color: #fff; backdrop-filter: blur(5px); display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 10; max-height: 50%; overflow-y: auto; }
         .info-panel-activity.show { display: block; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .info-panel-activity h3 { font-size: 19px; color: #00e5ff; margin: 0 0 5px; }
         .info-panel-activity .en-title { font-size: 13px; color: #8faec9; font-family: monospace; display: block; margin-bottom: 12px; direction: ltr; text-align: left; }
         .info-panel-activity p { font-size: 14.5px; line-height: 2; color: #d6e4f4; margin: 0; text-align: justify; }
@@ -156,8 +135,12 @@
                 <div id="threejs-iframe-container">
                     <iframe src="https://easyanatomylab.com/embed/sheep-brain-dissection" title="مدل سه‌بعدی" allow="fullscreen" allowfullscreen loading="lazy"></iframe>
                     
-                    <div class="slide-controls" id="slide-controls"></div>
+                    <!-- دکمه‌های کنترل اسلاید -->
+                    <div class="slide-controls" id="slide-controls">
+                        <!-- با جاوااسکریپت پر میشه -->
+                    </div>
 
+                    <!-- پنل اطلاعات شناور -->
                     <div class="info-overlay" id="model-info-overlay">
                         <button class="close-info" onclick="document.getElementById('model-info-overlay').classList.remove('show')">✕</button>
                         <h3 id="model-info-fa">نام</h3>
@@ -289,8 +272,7 @@
             "Arbor vitae": { fa: "درخت زندگی", desc: "ماده سفید شاخه‌دار درون مخچه که ظاهری شبیه به درخت دارد." },
             "Medulla oblongata": { fa: "بصل‌النخاع", desc: "پایین‌ترین بخش ساقه مغز که مراکز حیاتی تنفس و ضربان قلب را کنترل می‌کند." },
             "Pons": { fa: "پل مغزی", desc: "برجستگی میانی ساقه مغز که ارتباط بین مخ و مخچه را برقرار می‌کند." },
-            "White matter": { fa: "ماده سفید", desc: "بافتی در زیر قشر خاکستری که از آکسون‌های میلین‌دار تشکیل شده است." },
-            "Corpus callosum": { fa: "جسم پینه‌ای", desc: "نوار ضخیمی از رشته‌های عصبی سفید که دو نیم‌کره چپ و راست را به هم متصل می‌کند." }
+            "White matter": { fa: "ماده سفید", desc: "بافتی در زیر قشر خاکستری که از آکسون‌های میلین‌دار تشکیل شده است." }
         };
 
         const slidesData = {
@@ -738,4 +720,4 @@
     </script>
 
 </body>
-    </html>
+                    </html> 
